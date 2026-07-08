@@ -147,7 +147,7 @@ SQL 文件路径：
    后端地址：
 
    ```text
-   http://localhost:8080
+   http://localhost:8087
    ```
 
 4. 安装前端依赖
