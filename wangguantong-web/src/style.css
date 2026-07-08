@@ -1,0 +1,58 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #1d2129;
+  background: #f2f3f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.page-card {
+  min-height: calc(100vh - 112px);
+}
+
+.toolbar {
+  margin-bottom: 16px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  border: 1px solid #e5e6eb;
+}
+
+.stat-label {
+  color: #86909c;
+  font-size: 14px;
+}
+
+.stat-value {
+  margin-top: 10px;
+  color: #165dff;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.warning-text {
+  color: #f53f3f;
+  font-weight: 600;
+}
+
+.no-wrap-table .arco-table-th,
+.no-wrap-table .arco-table-td,
+.no-wrap-table .arco-table-cell {
+  white-space: nowrap;
+  word-break: keep-all;
+}
