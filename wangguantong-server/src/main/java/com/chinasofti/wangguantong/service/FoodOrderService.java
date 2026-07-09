@@ -8,4 +8,6 @@ public interface FoodOrderService extends IService<FoodOrder> {
     void createOrder(FoodOrder foodOrder);
 
     void cancelOrder(Long id);
+
+    void completeOrder(Long id);
 }

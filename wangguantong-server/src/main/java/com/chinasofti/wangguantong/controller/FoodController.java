@@ -33,9 +33,11 @@ public class FoodController {
 
     @GetMapping("/item/list")
     public Result<List<FoodItem>> itemList(@RequestParam(required = false) String name,
+                                           @RequestParam(required = false) String category,
                                            @RequestParam(required = false) String status) {
         LambdaQueryWrapper<FoodItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(name), FoodItem::getName, name)
+                .eq(StringUtils.hasText(category), FoodItem::getCategory, category)
                 .eq(StringUtils.hasText(status), FoodItem::getStatus, status)
                 .orderByDesc(FoodItem::getId);
         return Result.success(foodItemService.list(wrapper));
@@ -60,6 +62,9 @@ public class FoodController {
         if (!StringUtils.hasText(item.getStatus())) {
             item.setStatus("上架");
         }
+        if (!StringUtils.hasText(item.getCategory())) {
+            item.setCategory("其他");
+        }
         foodItemService.save(item);
         return Result.success();
     }
@@ -68,6 +73,9 @@ public class FoodController {
     public Result<Void> updateItem(@RequestBody FoodItem item) {
         if (item.getId() == null || foodItemService.getById(item.getId()) == null) {
             return Result.error("商品不存在");
+        }
+        if (!StringUtils.hasText(item.getCategory())) {
+            item.setCategory("其他");
         }
         foodItemService.updateById(item);
         return Result.success();
@@ -96,6 +104,16 @@ public class FoodController {
     public Result<Void> cancelOrder(@PathVariable Long id) {
         try {
             foodOrderService.cancelOrder(id);
+            return Result.success();
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/order/complete/{id}")
+    public Result<Void> completeOrder(@PathVariable Long id) {
+        try {
+            foodOrderService.completeOrder(id);
             return Result.success();
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());

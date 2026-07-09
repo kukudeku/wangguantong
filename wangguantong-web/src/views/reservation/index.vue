@@ -17,6 +17,7 @@
       </a-form-item>
       <a-form-item label="预约时间">
         <a-date-picker v-model="form.reserveTime" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 220px" />
+        <div class="form-tip">只能预约当前时间起 1 小时内，超时未上机自动取消。</div>
       </a-form-item>
       <a-button type="primary" @click="submitReservation">预约锁定</a-button>
     </a-form>
@@ -41,9 +42,15 @@
       </a-space>
     </a-form>
 
-    <a-table :columns="columns" :data="records" row-key="id" :pagination="false">
+    <a-table class="no-wrap-table" :columns="columns" :data="records" row-key="id" :pagination="false">
+      <template #reserveTime="{ record }">
+        {{ formatDateTime(record.reserveTime) }}
+      </template>
       <template #status="{ record }">
         <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
+      </template>
+      <template #createTime="{ record }">
+        {{ formatDateTime(record.createTime) }}
       </template>
       <template #actions="{ record }">
         <div class="action-buttons" v-if="record.status === '已预约'">
@@ -66,6 +73,7 @@ import { Message } from '@arco-design/web-vue'
 import { getFreeComputers } from '../../api/computer'
 import { getMemberList } from '../../api/member'
 import { addReservation, cancelReservation, getReservationList, startReservation } from '../../api/reservation'
+import { formatDateTime } from '../../utils/format'
 
 const members = ref([])
 const freeComputers = ref([])
@@ -85,9 +93,9 @@ const columns = [
   { title: '预约ID', dataIndex: 'id', width: 90 },
   { title: '会员姓名', dataIndex: 'memberName' },
   { title: '电脑编号', dataIndex: 'computerNo' },
-  { title: '预约时间', dataIndex: 'reserveTime' },
+  { title: '预约时间', slotName: 'reserveTime' },
   { title: '状态', slotName: 'status' },
-  { title: '创建时间', dataIndex: 'createTime' },
+  { title: '创建时间', slotName: 'createTime' },
   { title: '操作', slotName: 'actions', width: 190 }
 ]
 
@@ -123,12 +131,35 @@ async function submitReservation() {
     Message.error('请选择会员和空闲电脑')
     return
   }
+  if (!validateReservationTime(form.reserveTime)) return
   await addReservation(form)
   Message.success('预约锁定成功')
   form.memberId = null
   form.computerId = null
   form.reserveTime = ''
   loadAll()
+}
+
+function validateReservationTime(value) {
+  if (!value) {
+    Message.error('请选择预约时间')
+    return false
+  }
+  const reserveTime = new Date(String(value).replace(' ', 'T')).getTime()
+  const nowTime = Date.now()
+  if (Number.isNaN(reserveTime)) {
+    Message.error('预约时间格式不正确')
+    return false
+  }
+  if (reserveTime < nowTime) {
+    Message.error('预约时间不能早于当前时间')
+    return false
+  }
+  if (reserveTime > nowTime + 60 * 60 * 1000) {
+    Message.error('只能预约最近 1 小时')
+    return false
+  }
+  return true
 }
 
 async function handleCancel(id) {
@@ -145,3 +176,11 @@ async function handleStart(id) {
 
 onMounted(loadAll)
 </script>
+
+<style scoped>
+.form-tip {
+  margin-top: 6px;
+  color: #86909c;
+  font-size: 12px;
+}
+</style>

@@ -7,6 +7,16 @@
 | 本地开发 | `npm run dev` | `http://localhost:8080` | 适合自己电脑写代码、课堂演示 |
 | 宝塔部署 | `npm run build` | `/api` | 适合服务器 Nginx 反向代理 |
 
+访问规则：
+
+```text
+默认用户系统：/
+用户系统页面：/user
+用户登录页面：/user/login
+管理员后台：/admin
+管理员登录页面：/admin/login
+```
+
 前端请求地址在这里配置：
 
 ```text
@@ -81,6 +91,13 @@ npm run dev
 
 ```text
 http://localhost:5173
+```
+
+本地访问：
+
+```text
+用户系统：http://localhost:5173/
+管理员后台：http://localhost:5173/admin
 ```
 
 本地开发时，前端会请求：
@@ -289,7 +306,8 @@ http://你的域名
 登录：
 
 ```text
-admin / 123456
+用户端：110101199001011234 / 123456
+管理员后台：admin / 123456
 ```
 
 ## 六、一句话总结
@@ -297,7 +315,8 @@ admin / 123456
 本地：
 
 ```text
-前端 localhost:5173 -> 后端 localhost:8080
+用户端 localhost:5173/ -> 后端 localhost:8080
+后台 localhost:5173/admin -> 后端 localhost:8080
 ```
 
 宝塔：

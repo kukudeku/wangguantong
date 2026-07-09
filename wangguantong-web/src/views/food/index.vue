@@ -39,6 +39,7 @@
           <a-form-item label="订单状态">
             <a-select v-model="orderQuery.status" allow-clear style="width: 140px">
               <a-option value="已下单">已下单</a-option>
+              <a-option value="已完成">已完成</a-option>
               <a-option value="已取消">已取消</a-option>
             </a-select>
           </a-form-item>
@@ -48,15 +49,23 @@
           </a-space>
         </a-form>
 
-        <a-table :columns="orderColumns" :data="orders" row-key="id" :pagination="false">
+        <a-table class="no-wrap-table" :columns="orderColumns" :data="orders" row-key="id" :pagination="false">
           <template #status="{ record }">
-            <a-tag :color="record.status === '已下单' ? 'green' : 'gray'">{{ record.status }}</a-tag>
+            <a-tag :color="orderStatusColor(record.status)">{{ record.status }}</a-tag>
+          </template>
+          <template #createTime="{ record }">
+            {{ formatDateTime(record.createTime) }}
           </template>
           <template #actions="{ record }">
-            <a-popconfirm v-if="record.status === '已下单'" content="确认取消该订单吗？" @ok="handleCancelOrder(record.id)">
-              <a-button size="small" status="danger">取消订单</a-button>
-            </a-popconfirm>
-            <span v-else>已取消</span>
+            <div v-if="record.status === '已下单'" class="action-buttons">
+              <a-popconfirm content="确认该订单已完成吗？" @ok="handleCompleteOrder(record.id)">
+                <a-button size="small" type="primary">完成订单</a-button>
+              </a-popconfirm>
+              <a-popconfirm content="确认取消该订单吗？" @ok="handleCancelOrder(record.id)">
+                <a-button size="small" status="danger">取消订单</a-button>
+              </a-popconfirm>
+            </div>
+            <span v-else>{{ record.status }}</span>
           </template>
         </a-table>
       </a-tab-pane>
@@ -65,6 +74,11 @@
         <a-form class="toolbar" :model="itemQuery" layout="inline">
           <a-form-item label="商品名称">
             <a-input v-model="itemQuery.name" allow-clear />
+          </a-form-item>
+          <a-form-item label="分类">
+            <a-select v-model="itemQuery.category" allow-clear style="width: 120px">
+              <a-option v-for="category in foodCategories" :key="category" :value="category">{{ category }}</a-option>
+            </a-select>
           </a-form-item>
           <a-form-item label="状态">
             <a-select v-model="itemQuery.status" allow-clear style="width: 120px">
@@ -79,7 +93,7 @@
           </a-space>
         </a-form>
 
-        <a-table :columns="itemColumns" :data="items" row-key="id" :pagination="false">
+        <a-table class="no-wrap-table" :columns="itemColumns" :data="items" row-key="id" :pagination="false">
           <template #status="{ record }">
             <a-tag :color="record.status === '上架' ? 'green' : 'gray'">{{ record.status }}</a-tag>
           </template>
@@ -99,6 +113,11 @@
       <a-form :model="itemForm" layout="vertical">
         <a-form-item label="商品名称">
           <a-input v-model="itemForm.name" />
+        </a-form-item>
+        <a-form-item label="分类">
+          <a-select v-model="itemForm.category">
+            <a-option v-for="category in foodCategories" :key="category" :value="category">{{ category }}</a-option>
+          </a-select>
         </a-form-item>
         <a-form-item label="价格">
           <a-input-number v-model="itemForm.price" :min="0.1" />
@@ -125,18 +144,21 @@ import {
   addFoodItem,
   addFoodOrder,
   cancelFoodOrder,
+  completeFoodOrder,
   deleteFoodItem,
   getAvailableFoodItems,
   getFoodItems,
   getFoodOrders,
   updateFoodItem
 } from '../../api/food'
+import { formatDateTime } from '../../utils/format'
 
 const members = ref([])
 const availableItems = ref([])
 const items = ref([])
 const orders = ref([])
 const itemVisible = ref(false)
+const foodCategories = ['饮料', '餐食', '零食', '其他']
 
 const orderForm = reactive({
   customerType: '会员',
@@ -147,8 +169,8 @@ const orderForm = reactive({
 })
 
 const orderQuery = reactive({ customerName: '', status: '' })
-const itemQuery = reactive({ name: '', status: '' })
-const itemForm = reactive({ id: null, name: '', price: 1, status: '上架', remark: '' })
+const itemQuery = reactive({ name: '', category: '', status: '' })
+const itemForm = reactive({ id: null, name: '', category: '饮料', price: 1, status: '上架', remark: '' })
 
 const orderColumns = [
   { title: '订单ID', dataIndex: 'id', width: 90 },
@@ -159,13 +181,14 @@ const orderColumns = [
   { title: '数量', dataIndex: 'quantity' },
   { title: '总金额', dataIndex: 'totalAmount' },
   { title: '状态', slotName: 'status' },
-  { title: '下单时间', dataIndex: 'createTime' },
-  { title: '操作', slotName: 'actions', width: 120 }
+  { title: '下单时间', slotName: 'createTime' },
+  { title: '操作', slotName: 'actions', width: 180 }
 ]
 
 const itemColumns = [
   { title: '商品ID', dataIndex: 'id', width: 90 },
   { title: '商品名称', dataIndex: 'name' },
+  { title: '分类', dataIndex: 'category' },
   { title: '价格', dataIndex: 'price' },
   { title: '状态', slotName: 'status' },
   { title: '备注', dataIndex: 'remark' },
@@ -200,6 +223,7 @@ function resetOrderQuery() {
 
 function resetItemQuery() {
   itemQuery.name = ''
+  itemQuery.category = ''
   itemQuery.status = ''
   loadItems()
 }
@@ -225,13 +249,25 @@ async function handleCancelOrder(id) {
   loadOrders()
 }
 
+async function handleCompleteOrder(id) {
+  await completeFoodOrder(id)
+  Message.success('订单已完成')
+  loadOrders()
+}
+
+function orderStatusColor(status) {
+  if (status === '已下单') return 'blue'
+  if (status === '已完成') return 'green'
+  return 'gray'
+}
+
 function openAddItem() {
-  Object.assign(itemForm, { id: null, name: '', price: 1, status: '上架', remark: '' })
+  Object.assign(itemForm, { id: null, name: '', category: '饮料', price: 1, status: '上架', remark: '' })
   itemVisible.value = true
 }
 
 function openEditItem(record) {
-  Object.assign(itemForm, record)
+  Object.assign(itemForm, { ...record, category: record.category || '其他' })
   itemVisible.value = true
 }
 

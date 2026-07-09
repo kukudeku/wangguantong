@@ -31,9 +31,11 @@ public class MemberController {
 
     @GetMapping("/list")
     public Result<List<Member>> list(@RequestParam(required = false) String name,
+                                     @RequestParam(required = false) String idCard,
                                      @RequestParam(required = false) String phone) {
         LambdaQueryWrapper<Member> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(name), Member::getName, name)
+                .like(StringUtils.hasText(idCard), Member::getIdCard, idCard)
                 .like(StringUtils.hasText(phone), Member::getPhone, phone)
                 .orderByDesc(Member::getId);
         return Result.success(memberService.list(wrapper));
@@ -53,9 +55,16 @@ public class MemberController {
         if (!StringUtils.hasText(member.getName())) {
             return Result.error("会员姓名不能为空");
         }
+        if (!StringUtils.hasText(member.getIdCard())) {
+            return Result.error("身份证号不能为空");
+        }
         if (!StringUtils.hasText(member.getPhone())) {
             return Result.error("手机号不能为空");
         }
+        if (!StringUtils.hasText(member.getPassword())) {
+            return Result.error("密码不能为空");
+        }
+        member.setUsername(member.getIdCard());
         member.setId(null);
         member.setBalance(BigDecimal.ZERO);
         if (!StringUtils.hasText(member.getUserType())) {
@@ -75,6 +84,10 @@ public class MemberController {
         if (member.getId() == null || memberService.getById(member.getId()) == null) {
             return Result.error("会员不存在");
         }
+        if (!StringUtils.hasText(member.getIdCard())) {
+            return Result.error("身份证号不能为空");
+        }
+        member.setUsername(member.getIdCard());
         memberService.updateById(member);
         return Result.success();
     }

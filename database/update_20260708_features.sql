@@ -8,13 +8,38 @@ ALTER TABLE `member`
   ADD COLUMN `user_type` VARCHAR(20) NOT NULL DEFAULT '会员' COMMENT '用户类型：会员 / 散客',
   ADD COLUMN `member_level` VARCHAR(20) NOT NULL DEFAULT '普通会员' COMMENT '会员级别：散客 / 普通会员 / 黄金会员 / 钻石会员';
 
+ALTER TABLE `member`
+  ADD COLUMN `username` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '登录账号',
+  ADD COLUMN `password` VARCHAR(50) NOT NULL DEFAULT '123456' COMMENT '登录密码',
+  ADD COLUMN `id_card` VARCHAR(30) NOT NULL DEFAULT '' COMMENT '身份证号';
+
+UPDATE `member` SET username = phone WHERE username = '';
+UPDATE `member` SET id_card = username WHERE id_card = '';
+
 CREATE TABLE IF NOT EXISTS `food_item` (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
   name VARCHAR(50) NOT NULL COMMENT '商品名称',
+  category VARCHAR(30) NOT NULL DEFAULT '其他' COMMENT '商品分类',
   price DECIMAL(10,2) NOT NULL COMMENT '单价',
   status VARCHAR(20) NOT NULL DEFAULT '上架' COMMENT '状态：上架 / 下架',
   remark VARCHAR(200) NULL COMMENT '备注'
 ) COMMENT='点餐商品表';
+
+SET @food_category_column_exists = (
+  SELECT COUNT(1)
+  FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'food_item'
+    AND COLUMN_NAME = 'category'
+);
+SET @food_category_sql = IF(
+  @food_category_column_exists = 0,
+  'ALTER TABLE `food_item` ADD COLUMN `category` VARCHAR(30) NOT NULL DEFAULT ''其他'' COMMENT ''商品分类'' AFTER `name`',
+  'SELECT 1'
+);
+PREPARE food_category_stmt FROM @food_category_sql;
+EXECUTE food_category_stmt;
+DEALLOCATE PREPARE food_category_stmt;
 
 CREATE TABLE IF NOT EXISTS `food_order` (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
@@ -42,10 +67,10 @@ CREATE TABLE IF NOT EXISTS `reservation_record` (
   create_time DATETIME NOT NULL COMMENT '创建时间'
 ) COMMENT='预约记录表';
 
-INSERT INTO `food_item` (name, price, status, remark)
-SELECT '可乐', 4.00, '上架', '冰镇饮料'
+INSERT INTO `food_item` (name, category, price, status, remark)
+SELECT '可乐', '饮料', 4.00, '上架', '冰镇饮料'
 WHERE NOT EXISTS (SELECT 1 FROM `food_item` WHERE name = '可乐');
 
-INSERT INTO `food_item` (name, price, status, remark)
-SELECT '泡面', 6.00, '上架', '经典桶面'
+INSERT INTO `food_item` (name, category, price, status, remark)
+SELECT '泡面', '餐食', 6.00, '上架', '经典桶面'
 WHERE NOT EXISTS (SELECT 1 FROM `food_item` WHERE name = '泡面');

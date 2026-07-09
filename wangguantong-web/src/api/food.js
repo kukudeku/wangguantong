@@ -28,6 +28,10 @@ export function cancelFoodOrder(id) {
   return request.post(`/food/order/cancel/${id}`)
 }
 
+export function completeFoodOrder(id) {
+  return request.post(`/food/order/complete/${id}`)
+}
+
 export function getFoodOrders(params) {
   return request.get('/food/order/list', { params })
 }

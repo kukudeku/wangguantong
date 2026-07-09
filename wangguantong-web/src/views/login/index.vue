@@ -9,6 +9,7 @@
           <a-input-password v-model="form.password" placeholder="请输入密码" />
         </a-form-item>
         <a-button type="primary" long @click="handleLogin">登录</a-button>
+        <a-button class="user-entry" long @click="goUserPage">进入用户系统</a-button>
       </a-form>
     </a-card>
   </div>
@@ -34,7 +35,11 @@ async function handleLogin() {
   const admin = await login(form)
   localStorage.setItem('admin', JSON.stringify(admin))
   Message.success('登录成功')
-  router.push('/dashboard')
+  router.push('/admin/dashboard')
+}
+
+function goUserPage() {
+  router.push('/user/login')
 }
 </script>
 
@@ -49,5 +54,9 @@ async function handleLogin() {
 
 .login-card {
   width: 380px;
+}
+
+.user-entry {
+  margin-top: 12px;
 }
 </style>

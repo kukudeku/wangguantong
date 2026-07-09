@@ -24,6 +24,9 @@ CREATE TABLE `admin` (
 -- 会员表
 CREATE TABLE `member` (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+  username VARCHAR(50) NOT NULL COMMENT '登录账号',
+  password VARCHAR(50) NOT NULL DEFAULT '123456' COMMENT '登录密码',
+  id_card VARCHAR(30) NOT NULL COMMENT '身份证号',
   name VARCHAR(50) NOT NULL COMMENT '会员姓名',
   phone VARCHAR(20) NOT NULL COMMENT '手机号',
   balance DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT '余额',
@@ -47,6 +50,7 @@ CREATE TABLE `computer` (
 CREATE TABLE `food_item` (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
   name VARCHAR(50) NOT NULL COMMENT '商品名称',
+  category VARCHAR(30) NOT NULL DEFAULT '其他' COMMENT '商品分类',
   price DECIMAL(10,2) NOT NULL COMMENT '单价',
   status VARCHAR(20) NOT NULL DEFAULT '上架' COMMENT '状态：上架 / 下架',
   remark VARCHAR(200) NULL COMMENT '备注'
@@ -98,7 +102,7 @@ CREATE TABLE `online_record` (
   computer_no VARCHAR(30) NOT NULL COMMENT '电脑编号',
   start_time DATETIME NOT NULL COMMENT '开始时间',
   end_time DATETIME NULL COMMENT '结束时间',
-  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT '消费金额',
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT '已扣消费金额',
   status VARCHAR(20) NOT NULL COMMENT '状态'
 ) COMMENT='上机记录表';
 
@@ -106,11 +110,11 @@ CREATE TABLE `online_record` (
 INSERT INTO `admin` (username, password, real_name) VALUES ('admin', '123456', '管理员');
 
 -- 会员测试数据
-INSERT INTO `member` (name, phone, balance, user_type, member_level, status, create_time) VALUES
-('张三', '13800000001', 100.00, '会员', '普通会员', '正常', NOW()),
-('李四', '13800000002', 60.00, '会员', '黄金会员', '正常', NOW()),
-('王五', '13800000003', 0.00, '散客', '散客', '正常', NOW()),
-('赵六', '13800000004', 0.00, '会员', '普通会员', '禁用', NOW());
+INSERT INTO `member` (username, password, id_card, name, phone, balance, user_type, member_level, status, create_time) VALUES
+('110101199001011234', '123456', '110101199001011234', '张三', '13800000001', 100.00, '会员', '普通会员', '正常', NOW()),
+('110101199002022345', '123456', '110101199002022345', '李四', '13800000002', 60.00, '会员', '黄金会员', '正常', NOW()),
+('110101199003033456', '123456', '110101199003033456', '王五', '13800000003', 0.00, '散客', '散客', '正常', NOW()),
+('110101199004044567', '123456', '110101199004044567', '赵六', '13800000004', 0.00, '会员', '普通会员', '禁用', NOW());
 
 -- 电脑测试数据
 INSERT INTO `computer` (computer_no, area, price_per_hour, status, remark) VALUES
@@ -121,11 +125,11 @@ INSERT INTO `computer` (computer_no, area, price_per_hour, status, remark) VALUE
 ('C001', '电竞三区', 8.00, '预约锁定', '已被预约');
 
 -- 点餐商品测试数据
-INSERT INTO `food_item` (name, price, status, remark) VALUES
-('可乐', 4.00, '上架', '冰镇饮料'),
-('泡面', 6.00, '上架', '经典桶面'),
-('烤肠', 3.00, '上架', '热食'),
-('矿泉水', 2.00, '上架', '常温饮料');
+INSERT INTO `food_item` (name, category, price, status, remark) VALUES
+('可乐', '饮料', 4.00, '上架', '冰镇饮料'),
+('泡面', '餐食', 6.00, '上架', '经典桶面'),
+('烤肠', '餐食', 3.00, '上架', '热食'),
+('矿泉水', '饮料', 2.00, '上架', '常温饮料');
 
 -- 点餐订单测试数据
 INSERT INTO `food_order` (member_id, member_name, customer_type, customer_name, food_item_id, food_item_name, price, quantity, total_amount, status, create_time) VALUES

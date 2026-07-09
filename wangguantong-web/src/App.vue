@@ -1,16 +1,16 @@
 <template>
-  <router-view v-if="$route.path === '/login'" />
+  <router-view v-if="publicPage" />
   <a-layout v-else class="admin-layout">
     <a-layout-sider class="sider">
       <div class="logo">网管通</div>
       <a-menu :selected-keys="[$route.path]" @menu-item-click="goPage">
-        <a-menu-item key="/dashboard">首页</a-menu-item>
-        <a-menu-item key="/member">会员管理</a-menu-item>
-        <a-menu-item key="/computer">电脑管理</a-menu-item>
-        <a-menu-item key="/reservation">预约管理</a-menu-item>
-        <a-menu-item key="/recharge">充值管理</a-menu-item>
-        <a-menu-item key="/online">上机管理</a-menu-item>
-        <a-menu-item key="/food">网吧点餐</a-menu-item>
+        <a-menu-item key="/admin/dashboard">首页</a-menu-item>
+        <a-menu-item key="/admin/member">会员管理</a-menu-item>
+        <a-menu-item key="/admin/computer">电脑管理</a-menu-item>
+        <a-menu-item key="/admin/reservation">预约管理</a-menu-item>
+        <a-menu-item key="/admin/recharge">充值管理</a-menu-item>
+        <a-menu-item key="/admin/online">上机管理</a-menu-item>
+        <a-menu-item key="/admin/food">网吧点餐</a-menu-item>
       </a-menu>
     </a-layout-sider>
 
@@ -35,6 +35,8 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+const publicPage = computed(() => !router.currentRoute.value.path.startsWith('/admin') || router.currentRoute.value.path === '/admin/login')
+
 const admin = computed(() => {
   const text = localStorage.getItem('admin')
   return text ? JSON.parse(text) : null
@@ -46,7 +48,7 @@ function goPage(path) {
 
 function logout() {
   localStorage.removeItem('admin')
-  router.push('/login')
+  router.push('/admin/login')
 }
 </script>
 

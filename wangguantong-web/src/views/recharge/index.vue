@@ -14,7 +14,11 @@
       <a-button type="primary" @click="submitRecharge">确认充值</a-button>
     </a-form>
 
-    <a-table :columns="columns" :data="records" row-key="id" :pagination="false" />
+    <a-table class="no-wrap-table" :columns="columns" :data="records" row-key="id" :pagination="false">
+      <template #createTime="{ record }">
+        {{ formatDateTime(record.createTime) }}
+      </template>
+    </a-table>
   </a-card>
 </template>
 
@@ -23,6 +27,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { getMemberList } from '../../api/member'
 import { addRecharge, getRechargeList } from '../../api/recharge'
+import { formatDateTime } from '../../utils/format'
 
 const members = ref([])
 const records = ref([])
@@ -36,7 +41,7 @@ const columns = [
   { title: '会员ID', dataIndex: 'memberId' },
   { title: '会员姓名', dataIndex: 'memberName' },
   { title: '充值金额', dataIndex: 'amount' },
-  { title: '充值时间', dataIndex: 'createTime' }
+  { title: '充值时间', slotName: 'createTime' }
 ]
 
 async function loadData() {

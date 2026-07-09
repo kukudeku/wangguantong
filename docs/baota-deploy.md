@@ -24,6 +24,7 @@ wangguantong
 ├── database
 │   ├── wangguantong.sql
 │   └── update_20260708_features.sql
+│   └── update_20260708_user_login.sql
 ├── wangguantong-server
 └── wangguantong-web
 ```
@@ -55,6 +56,12 @@ wangguantong
 
 ```text
 database/update_20260708_features.sql
+```
+
+如果旧库只缺少用户端账号密码字段，可以执行：
+
+```text
+database/update_20260708_user_login.sql
 ```
 
 新部署建议直接执行完整的 `wangguantong.sql`。
@@ -272,12 +279,19 @@ http://服务器IP
 密码：123456
 ```
 
+用户端账号：
+
+```text
+身份证号：110101199001011234
+密码：123456
+```
+
 ## 十一、功能测试
 
 登录：
 
-- 输入 `admin / 123456`
-- 登录后进入首页
+- 访问 `/` 进入用户系统，输入 `110101199001011234 / 123456`
+- 访问 `/admin` 进入管理员后台，输入 `admin / 123456`
 
 首页：
 

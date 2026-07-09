@@ -9,6 +9,7 @@
 /Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/java/com/chinasofti/wangguantong/controller/OnlineController.java
 /Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/java/com/chinasofti/wangguantong/controller/RechargeController.java
 /Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/java/com/chinasofti/wangguantong/controller/ReservationController.java
+/Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/java/com/chinasofti/wangguantong/controller/UserController.java
 /Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/java/com/chinasofti/wangguantong/entity/Admin.java
 /Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/java/com/chinasofti/wangguantong/entity/Computer.java
 /Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/java/com/chinasofti/wangguantong/entity/FoodItem.java

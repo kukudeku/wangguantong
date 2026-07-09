@@ -18,6 +18,11 @@
       <a-button type="primary" @click="handleStart">上机</a-button>
     </a-form>
 
+    <a-tabs v-model:active-key="activeTab" class="online-tabs" @change="handleTabChange">
+      <a-tab-pane key="current" title="当前上机" />
+      <a-tab-pane key="history" title="上机历史" />
+    </a-tabs>
+
     <a-form class="toolbar" :model="query" layout="inline">
       <a-form-item label="会员姓名">
         <a-input v-model="query.memberName" allow-clear />
@@ -25,19 +30,19 @@
       <a-form-item label="电脑编号">
         <a-input v-model="query.computerNo" allow-clear />
       </a-form-item>
-      <a-form-item label="状态">
-        <a-select v-model="query.status" allow-clear style="width: 140px">
-          <a-option value="进行中">进行中</a-option>
-          <a-option value="已完成">已完成</a-option>
-        </a-select>
-      </a-form-item>
       <a-space>
         <a-button type="primary" @click="loadRecords">查询</a-button>
         <a-button @click="resetQuery">重置</a-button>
       </a-space>
     </a-form>
 
-    <a-table class="no-wrap-table" :columns="columns" :data="records" row-key="id" :pagination="false" :scroll="{ x: 1680 }">
+    <a-table class="no-wrap-table" :columns="columns" :data="records" row-key="id" :pagination="false" :scroll="{ x: 1580 }">
+      <template #startTime="{ record }">
+        {{ formatDateTime(record.startTime) }}
+      </template>
+      <template #endTime="{ record }">
+        {{ formatDateTime(record.endTime) }}
+      </template>
       <template #status="{ record }">
         <a-tag :color="record.status === '进行中' ? 'blue' : 'green'">{{ record.status }}</a-tag>
       </template>
@@ -49,7 +54,7 @@
         <span>{{ record.currentAmount || record.totalAmount || 0 }}</span>
       </template>
       <template #balanceWarning="{ record }">
-        <span v-if="record.warningMessage" class="warning-text">{{ record.warningMessage }}</span>
+        <span v-if="record.warningMessage" class="warning-text">余额不足</span>
         <span v-else>正常</span>
       </template>
       <template #actions="{ record }">
@@ -68,10 +73,12 @@ import { Message } from '@arco-design/web-vue'
 import { getFreeComputers } from '../../api/computer'
 import { getMemberList } from '../../api/member'
 import { endOnline, getOnlineList, startOnline } from '../../api/online'
+import { formatDateTime } from '../../utils/format'
 
 const members = ref([])
 const freeComputers = ref([])
 const records = ref([])
+const activeTab = ref('current')
 const now = ref(Date.now())
 let timer = null
 let refreshTimer = null
@@ -83,25 +90,24 @@ const startForm = reactive({
 
 const query = reactive({
   memberName: '',
-  computerNo: '',
-  status: ''
+  computerNo: ''
 })
 
 const columns = [
   { title: '记录ID', dataIndex: 'id', width: 90 },
   { title: '会员姓名', dataIndex: 'memberName', width: 100 },
   { title: '电脑编号', dataIndex: 'computerNo', width: 100 },
-  { title: '开始时间', dataIndex: 'startTime', width: 180 },
-  { title: '下机时间', dataIndex: 'endTime', width: 180 },
+  { title: '开始时间', slotName: 'startTime', width: 180 },
+  { title: '下机时间', slotName: 'endTime', width: 180 },
   { title: '实时上机时长', slotName: 'runningTime', width: 160 },
   { title: '计费小时', dataIndex: 'chargeHours', width: 90 },
   { title: '会员级别', dataIndex: 'memberLevel', width: 100 },
   { title: '折扣', dataIndex: 'discountRate', width: 80 },
   { title: '当前消费', slotName: 'currentAmount', width: 100 },
   { title: '会员余额', dataIndex: 'memberBalance', width: 100 },
-  { title: '余额提醒', slotName: 'balanceWarning', width: 180 },
+  { title: '余额提醒', slotName: 'balanceWarning', width: 110 },
   { title: '状态', slotName: 'status', width: 100 },
-  { title: '操作', slotName: 'actions', width: 120 }
+  { title: '操作', slotName: 'actions', width: 140 }
 ]
 
 async function loadOptions() {
@@ -110,7 +116,11 @@ async function loadOptions() {
 }
 
 async function loadRecords() {
-  records.value = await getOnlineList(query)
+  records.value = await getOnlineList({
+    memberName: query.memberName,
+    computerNo: query.computerNo,
+    status: activeTab.value === 'current' ? '进行中' : '已完成'
+  })
 }
 
 function formatRunningTime(startTime) {
@@ -131,7 +141,10 @@ async function loadAll() {
 function resetQuery() {
   query.memberName = ''
   query.computerNo = ''
-  query.status = ''
+  loadRecords()
+}
+
+function handleTabChange() {
   loadRecords()
 }
 
@@ -159,7 +172,7 @@ onMounted(() => {
     now.value = Date.now()
   }, 1000)
   refreshTimer = window.setInterval(() => {
-    loadRecords()
+    loadAll()
   }, 30000)
 })
 

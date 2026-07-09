@@ -22,6 +22,7 @@ com/chinasofti/wangguantong/controller/FoodController.class
 com/chinasofti/wangguantong/entity/OnlineRecord.class
 com/chinasofti/wangguantong/service/FoodItemService.class
 com/chinasofti/wangguantong/config/CorsConfig.class
+com/chinasofti/wangguantong/controller/UserController.class
 com/chinasofti/wangguantong/service/impl/ReservationRecordServiceImpl.class
 com/chinasofti/wangguantong/service/impl/FoodOrderServiceImpl.class
 com/chinasofti/wangguantong/entity/Member.class

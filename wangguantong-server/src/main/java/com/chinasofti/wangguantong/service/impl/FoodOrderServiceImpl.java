@@ -80,6 +80,9 @@ public class FoodOrderServiceImpl extends ServiceImpl<FoodOrderMapper, FoodOrder
         if ("已取消".equals(order.getStatus())) {
             throw new RuntimeException("订单已经取消");
         }
+        if ("已完成".equals(order.getStatus())) {
+            throw new RuntimeException("订单已完成，不能取消");
+        }
         if ("会员".equals(order.getCustomerType()) && order.getMemberId() != null) {
             Member member = memberService.getById(order.getMemberId());
             if (member != null) {
@@ -88,6 +91,19 @@ public class FoodOrderServiceImpl extends ServiceImpl<FoodOrderMapper, FoodOrder
             }
         }
         order.setStatus("已取消");
+        updateById(order);
+    }
+
+    @Override
+    public void completeOrder(Long id) {
+        FoodOrder order = getById(id);
+        if (order == null) {
+            throw new RuntimeException("订单不存在");
+        }
+        if (!"已下单".equals(order.getStatus())) {
+            throw new RuntimeException("只有已下单订单可以完成");
+        }
+        order.setStatus("已完成");
         updateById(order);
     }
 }

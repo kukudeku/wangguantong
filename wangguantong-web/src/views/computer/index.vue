@@ -19,7 +19,7 @@
       </a-space>
     </a-form>
 
-    <a-table :columns="columns" :data="tableData" row-key="id" :pagination="false">
+    <a-table class="no-wrap-table" :columns="columns" :data="tableData" row-key="id" :pagination="false">
       <template #status="{ record }">
         <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
       </template>

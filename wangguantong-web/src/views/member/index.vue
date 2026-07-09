@@ -4,6 +4,9 @@
       <a-form-item label="会员姓名">
         <a-input v-model="query.name" placeholder="请输入会员姓名" allow-clear />
       </a-form-item>
+      <a-form-item label="身份证号">
+        <a-input v-model="query.idCard" placeholder="请输入身份证号" allow-clear />
+      </a-form-item>
       <a-form-item label="手机号">
         <a-input v-model="query.phone" placeholder="请输入手机号" allow-clear />
       </a-form-item>
@@ -14,9 +17,12 @@
       </a-space>
     </a-form>
 
-    <a-table :columns="columns" :data="tableData" row-key="id" :pagination="false">
+    <a-table class="no-wrap-table" :columns="columns" :data="tableData" row-key="id" :pagination="false">
       <template #status="{ record }">
         <a-tag :color="record.status === '正常' ? 'green' : 'red'">{{ record.status }}</a-tag>
+      </template>
+      <template #createTime="{ record }">
+        {{ formatDateTime(record.createTime) }}
       </template>
       <template #actions="{ record }">
         <div class="action-buttons">
@@ -34,8 +40,14 @@
         <a-form-item label="会员姓名">
           <a-input v-model="form.name" />
         </a-form-item>
+        <a-form-item label="身份证号">
+          <a-input v-model="form.idCard" />
+        </a-form-item>
         <a-form-item label="手机号">
           <a-input v-model="form.phone" />
+        </a-form-item>
+        <a-form-item :label="form.id ? '重置密码' : '登录密码'">
+          <a-input-password v-model="form.password" :placeholder="form.id ? '留空则不修改密码' : '请输入登录密码'" />
         </a-form-item>
         <a-form-item v-if="form.id" label="余额">
           <a-input-number v-model="form.balance" :min="0" />
@@ -55,7 +67,7 @@
         <a-form-item label="会员级别">
           <a-select v-model="form.memberLevel">
             <a-option value="散客">散客（无折扣）</a-option>
-            <a-option value="普通会员">普通会员（95折）</a-option>
+            <a-option value="普通会员">普通会员（不打折）</a-option>
             <a-option value="黄金会员">黄金会员（9折）</a-option>
             <a-option value="钻石会员">钻石会员（8折）</a-option>
           </a-select>
@@ -81,8 +93,9 @@ import { onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { addRecharge } from '../../api/recharge'
 import { addMember, deleteMember, getMemberList, updateMember } from '../../api/member'
+import { formatDateTime } from '../../utils/format'
 
-const query = reactive({ name: '', phone: '' })
+const query = reactive({ name: '', idCard: '', phone: '' })
 const tableData = ref([])
 const formVisible = ref(false)
 const rechargeVisible = ref(false)
@@ -90,7 +103,9 @@ const rechargeVisible = ref(false)
 const form = reactive({
   id: null,
   name: '',
+  idCard: '',
   phone: '',
+  password: '',
   balance: 0,
   userType: '会员',
   memberLevel: '普通会员',
@@ -106,13 +121,14 @@ const rechargeForm = reactive({
 const columns = [
   { title: '会员ID', dataIndex: 'id', width: 90 },
   { title: '会员姓名', dataIndex: 'name' },
+  { title: '身份证号', dataIndex: 'idCard', width: 170 },
   { title: '手机号', dataIndex: 'phone' },
   { title: '余额', dataIndex: 'balance' },
   { title: '用户类型', dataIndex: 'userType' },
   { title: '会员级别', dataIndex: 'memberLevel' },
   { title: '状态', slotName: 'status' },
-  { title: '注册时间', dataIndex: 'createTime' },
-  { title: '操作', slotName: 'actions', width: 220 }
+  { title: '注册时间', slotName: 'createTime' },
+  { title: '操作', slotName: 'actions', width: 260 }
 ]
 
 async function loadList() {
@@ -121,25 +137,34 @@ async function loadList() {
 
 function resetQuery() {
   query.name = ''
+  query.idCard = ''
   query.phone = ''
   loadList()
 }
 
 function openAdd() {
-  Object.assign(form, { id: null, name: '', phone: '', balance: 0, userType: '会员', memberLevel: '普通会员', status: '正常' })
+  Object.assign(form, { id: null, name: '', idCard: '', phone: '', password: '', balance: 0, userType: '会员', memberLevel: '普通会员', status: '正常' })
   formVisible.value = true
 }
 
 function openEdit(record) {
-  Object.assign(form, record)
+  Object.assign(form, { ...record, password: '' })
   formVisible.value = true
 }
 
 async function saveMember() {
+  if (!form.id && !form.password) {
+    Message.error('请设置登录密码')
+    return
+  }
+  const payload = { ...form }
+  if (payload.id && !payload.password) {
+    delete payload.password
+  }
   if (form.id) {
-    await updateMember(form)
+    await updateMember(payload)
   } else {
-    await addMember(form)
+    await addMember(payload)
   }
   Message.success('保存成功')
   formVisible.value = false
