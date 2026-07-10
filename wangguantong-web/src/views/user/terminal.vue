@@ -89,8 +89,14 @@
             <strong class="status-normal">{{ currentMember?.status || '-' }}</strong>
           </div>
           <div class="wt-account-balance">
-            <span>可用余额</span>
-            <strong>￥{{ money(currentMember?.balance) }}</strong>
+            <div>
+              <span>可用余额</span>
+              <strong>￥{{ money(currentMember?.balance) }}</strong>
+            </div>
+            <button type="button" class="wt-recharge-entry" @click="openRechargeModal">
+              <IconPlus />
+              <span>充值</span>
+            </button>
           </div>
         </section>
 
@@ -173,7 +179,12 @@
                       <strong>￥{{ money(computer.pricePerHour) }}/小时</strong>
                     </div>
                     <div v-if="computer.status === '空闲'" class="wt-seat-actions">
-                      <a-button type="primary" @click="submitOnline(computer)">上机</a-button>
+                      <a-popconfirm
+                        :content="`确认使用 ${computer.computerNo} 上机吗？确认后将立即开始计费。`"
+                        @ok="submitOnline(computer)"
+                      >
+                        <a-button type="primary" long>上机</a-button>
+                      </a-popconfirm>
                       <a-button @click="openReservation(computer)">预约</a-button>
                     </div>
                     <a-button v-else disabled long>不可操作</a-button>
@@ -424,6 +435,54 @@
         <a-form-item label="确认新密码"><a-input-password v-model="passwordForm.confirmPassword" /></a-form-item>
       </a-form>
     </a-modal>
+
+    <a-modal
+      v-model:visible="rechargeVisible"
+      title="余额充值"
+      width="min(520px, calc(100vw - 24px))"
+      ok-text="确认充值"
+      cancel-text="取消"
+      :ok-loading="rechargeSubmitting"
+      :on-before-ok="submitRecharge"
+    >
+      <div class="wt-recharge-dialog">
+        <div class="wt-recharge-balance">
+          <span>当前余额</span>
+          <strong>￥{{ money(currentMember?.balance) }}</strong>
+        </div>
+        <div class="wt-recharge-field">
+          <label>选择充值金额</label>
+          <div class="wt-recharge-options">
+            <button
+              v-for="amount in rechargeOptions"
+              :key="amount"
+              type="button"
+              :class="{ active: Number(rechargeForm.amount) === amount }"
+              @click="rechargeForm.amount = amount"
+            >
+              ￥{{ amount }}
+            </button>
+          </div>
+        </div>
+        <div class="wt-recharge-field">
+          <label>自定义金额</label>
+          <a-input-number
+            v-model="rechargeForm.amount"
+            :min="1"
+            :max="10000"
+            :precision="2"
+            placeholder="请输入充值金额"
+            style="width: 100%"
+          >
+            <template #prefix>￥</template>
+          </a-input-number>
+        </div>
+        <div class="wt-recharge-notice">
+          <IconInfoCircle />
+          <span>本系统不接入支付平台，确认后将直接增加账户余额。</span>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -446,6 +505,7 @@ import { getComputerList } from '../../api/computer'
 import { addFoodOrder, getAvailableFoodItems } from '../../api/food'
 import { getMemberList } from '../../api/member'
 import { endOnline, startOnline } from '../../api/online'
+import { addRecharge } from '../../api/recharge'
 import { addReservation } from '../../api/reservation'
 import { changeUserPassword, getUserBalanceDetail, getUserOnlineRecords, getUserOrders } from '../../api/user'
 import { formatDateTime } from '../../utils/format'
@@ -464,9 +524,14 @@ const foodCart = reactive({})
 const now = ref(new Date())
 const reservationVisible = ref(false)
 const passwordVisible = ref(false)
+const rechargeVisible = ref(false)
+const rechargeSubmitting = ref(false)
+const rechargeSubmitted = ref(false)
 const selectedComputer = ref(null)
 const reservationForm = reactive({ reserveTime: '' })
 const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+const rechargeForm = reactive({ amount: 50 })
+const rechargeOptions = [20, 50, 100, 200]
 let timer = null
 let runningRefreshTimer = null
 
@@ -675,6 +740,40 @@ function logout() {
 function openPasswordModal() {
   Object.assign(passwordForm, { oldPassword: '', newPassword: '', confirmPassword: '' })
   passwordVisible.value = true
+}
+
+function openRechargeModal() {
+  rechargeForm.amount = 50
+  rechargeSubmitted.value = false
+  rechargeVisible.value = true
+}
+
+async function submitRecharge() {
+  const amount = Number(rechargeForm.amount)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    Message.error('充值金额必须大于 0')
+    return false
+  }
+  if (amount > 10000) {
+    Message.error('单次充值不能超过 10000 元')
+    return false
+  }
+  if (rechargeSubmitting.value || rechargeSubmitted.value) return false
+
+  rechargeSubmitting.value = true
+  rechargeSubmitted.value = true
+  try {
+    await addRecharge({ memberId: currentMember.value.id, amount })
+    await refreshCurrentMember()
+    await loadUserRecords()
+    Message.success(`充值 ${money(amount)} 元成功`)
+    return true
+  } catch (error) {
+    rechargeSubmitted.value = false
+    return false
+  } finally {
+    rechargeSubmitting.value = false
+  }
 }
 
 async function submitPasswordChange() {

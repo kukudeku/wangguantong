@@ -415,12 +415,54 @@
 }
 
 .wt-account-balance {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   background: #f4fbf7;
 }
 
-.wt-account-balance strong {
+.wt-account-balance > div > strong {
   color: #128450;
   font-size: 22px;
+}
+
+.wt-recharge-entry {
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #a9c0f3;
+  border-radius: 5px;
+  color: var(--wt-accent);
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.wt-recharge-entry:hover {
+  border-color: var(--wt-accent);
+  background: var(--wt-accent-soft);
+}
+
+.wt-recharge-entry:focus-visible {
+  outline: 2px solid #9bb4ea;
+  outline-offset: 1px;
+}
+
+.wt-recharge-entry svg {
+  font-size: 13px;
+}
+
+.wt-recharge-entry span {
+  margin: 0;
+  color: inherit;
 }
 
 .wt-layout-grid,
@@ -652,6 +694,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 7px;
+}
+
+.wt-seat-actions :deep(.arco-trigger-wrapper) {
+  width: 100%;
 }
 
 .wt-shell :deep(.arco-btn) {
@@ -1277,6 +1323,110 @@
   line-height: 1.5;
 }
 
+.wt-recharge-dialog {
+  --wt-accent: #2457d6;
+  --wt-accent-soft: #edf3ff;
+  --wt-muted: #6b768b;
+  --wt-border-strong: #cbd5e1;
+  display: grid;
+  gap: 20px;
+}
+
+.wt-recharge-balance {
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid #cde8da;
+  border-radius: 7px;
+  background: #f4fbf7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.wt-recharge-balance span,
+.wt-recharge-balance strong {
+  display: block;
+}
+
+.wt-recharge-balance span {
+  color: var(--wt-muted);
+  font-size: 12px;
+}
+
+.wt-recharge-balance strong {
+  color: #128450;
+  font-size: 26px;
+}
+
+.wt-recharge-field label {
+  display: block;
+  margin-bottom: 9px;
+  color: #46536a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.wt-recharge-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.wt-recharge-options button {
+  height: 42px;
+  border: 1px solid var(--wt-border-strong);
+  border-radius: 6px;
+  color: #4d5a70;
+  background: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.wt-recharge-options button:hover {
+  border-color: #8da8e2;
+  color: var(--wt-accent);
+}
+
+.wt-recharge-options button.active {
+  border-color: var(--wt-accent);
+  color: var(--wt-accent);
+  background: var(--wt-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--wt-accent);
+}
+
+.wt-recharge-dialog :deep(.arco-input-wrapper) {
+  min-height: 42px;
+  border: 1px solid var(--wt-border-strong);
+  background: #ffffff;
+}
+
+.wt-recharge-dialog :deep(.arco-input-wrapper:focus-within),
+.wt-recharge-dialog :deep(.arco-input-wrapper.arco-input-focus) {
+  border-color: var(--wt-accent);
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.12);
+}
+
+.wt-recharge-notice {
+  padding: 11px 12px;
+  border: 1px solid #cbd9f6;
+  border-radius: 6px;
+  color: #526a9c;
+  background: #f3f7ff;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.wt-recharge-notice svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
 @media (max-width: 1180px) {
   .wt-account-band {
     grid-template-columns: minmax(190px, 1.2fr) repeat(2, minmax(120px, 0.8fr)) minmax(150px, 0.8fr);
@@ -1530,5 +1680,9 @@
 
   .wt-running-actions :deep(.arco-btn) {
     width: 100%;
+  }
+
+  .wt-recharge-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
