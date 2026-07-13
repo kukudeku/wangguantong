@@ -1,0 +1,76 @@
+/* 全局盒模型：元素声明的宽高包含 padding 和 border，布局尺寸更容易计算。 */
+* {
+  box-sizing: border-box;
+}
+
+/* 全站默认字体、文字颜色和浅灰页面背景。 */
+body {
+  margin: 0;
+  color: #1d2129;
+  background: #f2f3f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* 后台每个主内容卡片至少填满当前窗口可用高度。 */
+.page-card {
+  min-height: calc(100vh - 112px);
+}
+
+/* 查询表单与下方表格之间的统一间距。 */
+.toolbar {
+  margin-bottom: 16px;
+}
+
+/* 表格操作按钮始终横向排列，避免“编辑/充值/删除”被挤到多行。 */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.action-buttons .arco-btn,
+.action-buttons .arco-trigger,
+.action-buttons .arco-popconfirm,
+.no-wrap-table .arco-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 首页统计卡片使用响应式网格，宽度不足时自动减少每行数量。 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  border: 1px solid #e5e6eb;
+}
+
+.stat-label {
+  color: #86909c;
+  font-size: 14px;
+}
+
+.stat-value {
+  margin-top: 10px;
+  color: #165dff;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* 余额不足等重要提醒使用红色强调。 */
+.warning-text {
+  color: #f53f3f;
+  font-weight: 600;
+}
+
+/* 管理后台表格内容不自动换行，列太多时由表格容器处理横向空间。 */
+.no-wrap-table .arco-table-th,
+.no-wrap-table .arco-table-td,
+.no-wrap-table .arco-table-cell {
+  white-space: nowrap;
+  word-break: keep-all;
+}

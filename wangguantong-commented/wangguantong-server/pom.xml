@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      继承 Spring Boot 官方父项目：它统一管理常用依赖版本和 Maven 默认配置，
+      因此下面大多数 Spring 依赖不需要再手写版本号。
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <!-- 当前项目在 Maven 中的唯一坐标：groupId + artifactId + version。 -->
+    <groupId>com.chinasofti</groupId>
+    <artifactId>wangguantong-server</artifactId>
+    <version>1.0.0</version>
+    <name>wangguantong-server</name>
+    <description>网管通后端项目</description>
+
+    <properties>
+        <!-- 编译和运行本项目需要 JDK 17。 -->
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        <!-- Spring MVC、内置 Tomcat 和 JSON 转换，负责提供 HTTP 接口。 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- MyBatis-Plus：简化数据库增删改查，项目中的 BaseMapper/IService 来自这里。 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <version>3.5.7</version>
+        </dependency>
+
+        <!-- MySQL JDBC 驱动；runtime 表示运行时需要，编写 Java 源码时无需直接引用。 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 把项目打包成可通过 java -jar 直接运行的 Spring Boot JAR。 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
