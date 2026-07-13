@@ -8,4 +8,6 @@ import java.math.BigDecimal;
 public interface RechargeRecordService extends IService<RechargeRecord> {
 
     void recharge(Long memberId, BigDecimal amount);
+
+    void recharge(Long memberId, BigDecimal amount, String rechargeType, String referenceNo);
 }

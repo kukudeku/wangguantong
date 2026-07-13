@@ -15,6 +15,8 @@ public class RechargeRecord {
     private Long memberId;
     private String memberName;
     private BigDecimal amount;
+    private String rechargeType;
+    private String referenceNo;
     private LocalDateTime createTime;
 
     public Long getId() {
@@ -47,6 +49,22 @@ public class RechargeRecord {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getRechargeType() {
+        return rechargeType;
+    }
+
+    public void setRechargeType(String rechargeType) {
+        this.rechargeType = rechargeType;
+    }
+
+    public String getReferenceNo() {
+        return referenceNo;
+    }
+
+    public void setReferenceNo(String referenceNo) {
+        this.referenceNo = referenceNo;
     }
 
     public LocalDateTime getCreateTime() {

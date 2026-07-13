@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS `food_order` (
   price DECIMAL(10,2) NOT NULL COMMENT '单价',
   quantity INT NOT NULL COMMENT '数量',
   total_amount DECIMAL(10,2) NOT NULL COMMENT '订单金额',
+  payment_method VARCHAR(20) NOT NULL DEFAULT '余额支付' COMMENT '支付方式：余额支付 / 微信支付 / 支付宝支付',
   status VARCHAR(20) NOT NULL DEFAULT '已下单' COMMENT '状态：已下单 / 已取消',
   create_time DATETIME NOT NULL COMMENT '下单时间'
 ) COMMENT='点餐订单表';

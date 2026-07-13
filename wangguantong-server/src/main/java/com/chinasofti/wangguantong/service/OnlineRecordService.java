@@ -1,6 +1,7 @@
 package com.chinasofti.wangguantong.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.chinasofti.wangguantong.dto.ChangeComputerResult;
 import com.chinasofti.wangguantong.entity.OnlineRecord;
 
 import java.util.List;
@@ -10,6 +11,8 @@ public interface OnlineRecordService extends IService<OnlineRecord> {
     void startOnline(Long memberId, Long computerId);
 
     void endOnline(Long recordId);
+
+    ChangeComputerResult changeComputer(Long recordId, Long targetComputerId);
 
     List<OnlineRecord> listWithRunningInfo(String memberName, String computerNo, String status);
 }

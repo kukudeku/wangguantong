@@ -2,6 +2,7 @@ package com.chinasofti.wangguantong.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.math.BigDecimal;
@@ -20,7 +21,18 @@ public class FoodOrder {
     private String foodItemName;
     private BigDecimal price;
     private Integer quantity;
+    private String batchNo;
+    private BigDecimal grossAmount;
+    private BigDecimal discountAmount;
+    private String couponName;
     private BigDecimal totalAmount;
+    private String paymentMethod;
+    @TableField(exist = false)
+    private String paymentStatus;
+    @TableField(exist = false)
+    private String paymentOutTradeNo;
+    @TableField(exist = false)
+    private BigDecimal paymentAmount;
     private String status;
     private LocalDateTime createTime;
 
@@ -96,12 +108,76 @@ public class FoodOrder {
         this.quantity = quantity;
     }
 
+    public String getBatchNo() {
+        return batchNo;
+    }
+
+    public void setBatchNo(String batchNo) {
+        this.batchNo = batchNo;
+    }
+
+    public BigDecimal getGrossAmount() {
+        return grossAmount;
+    }
+
+    public void setGrossAmount(BigDecimal grossAmount) {
+        this.grossAmount = grossAmount;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public String getCouponName() {
+        return couponName;
+    }
+
+    public void setCouponName(String couponName) {
+        this.couponName = couponName;
+    }
+
     public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
     public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public String getPaymentOutTradeNo() {
+        return paymentOutTradeNo;
+    }
+
+    public void setPaymentOutTradeNo(String paymentOutTradeNo) {
+        this.paymentOutTradeNo = paymentOutTradeNo;
+    }
+
+    public BigDecimal getPaymentAmount() {
+        return paymentAmount;
+    }
+
+    public void setPaymentAmount(BigDecimal paymentAmount) {
+        this.paymentAmount = paymentAmount;
     }
 
     public String getStatus() {

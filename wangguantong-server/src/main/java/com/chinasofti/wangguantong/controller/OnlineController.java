@@ -1,6 +1,7 @@
 package com.chinasofti.wangguantong.controller;
 
 import com.chinasofti.wangguantong.common.Result;
+import com.chinasofti.wangguantong.dto.ChangeComputerResult;
 import com.chinasofti.wangguantong.entity.OnlineRecord;
 import com.chinasofti.wangguantong.service.OnlineRecordService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,16 @@ public class OnlineController {
         try {
             onlineRecordService.endOnline(recordId);
             return Result.success();
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/change-computer")
+    public Result<ChangeComputerResult> changeComputer(@RequestBody java.util.Map<String, Long> form) {
+        try {
+            ChangeComputerResult result = onlineRecordService.changeComputer(form.get("recordId"), form.get("targetComputerId"));
+            return result.isChanged() ? Result.success(result) : Result.error(result.getMessage());
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }

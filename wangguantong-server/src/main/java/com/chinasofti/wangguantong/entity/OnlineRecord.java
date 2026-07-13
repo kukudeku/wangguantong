@@ -20,6 +20,9 @@ public class OnlineRecord {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private BigDecimal totalAmount;
+    private LocalDateTime segmentStartTime;
+    private BigDecimal segmentPaidAmount;
+    private String computerHistory;
     private String status;
 
     @TableField(exist = false)
@@ -108,6 +111,30 @@ public class OnlineRecord {
 
     public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public LocalDateTime getSegmentStartTime() {
+        return segmentStartTime;
+    }
+
+    public void setSegmentStartTime(LocalDateTime segmentStartTime) {
+        this.segmentStartTime = segmentStartTime;
+    }
+
+    public BigDecimal getSegmentPaidAmount() {
+        return segmentPaidAmount;
+    }
+
+    public void setSegmentPaidAmount(BigDecimal segmentPaidAmount) {
+        this.segmentPaidAmount = segmentPaidAmount;
+    }
+
+    public String getComputerHistory() {
+        return computerHistory;
+    }
+
+    public void setComputerHistory(String computerHistory) {
+        this.computerHistory = computerHistory;
     }
 
     public String getStatus() {

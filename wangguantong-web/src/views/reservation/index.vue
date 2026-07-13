@@ -42,7 +42,7 @@
       </a-space>
     </a-form>
 
-    <a-table class="no-wrap-table" :columns="columns" :data="records" row-key="id" :pagination="false">
+    <a-table class="no-wrap-table" :columns="columns" :data="records" row-key="id" :pagination="false" :scroll="{ x: 1080 }">
       <template #reserveTime="{ record }">
         {{ formatDateTime(record.reserveTime) }}
       </template>

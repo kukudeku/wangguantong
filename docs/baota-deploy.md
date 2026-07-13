@@ -25,6 +25,8 @@ wangguantong
 │   ├── wangguantong.sql
 │   └── update_20260708_features.sql
 │   └── update_20260708_user_login.sql
+│   └── update_20260714_food_payment.sql
+│   └── update_20260714_promotion.sql
 ├── wangguantong-server
 └── wangguantong-web
 ```
@@ -64,6 +66,20 @@ database/update_20260708_features.sql
 database/update_20260708_user_login.sql
 ```
 
+如果旧库需要升级真实微信/支付宝支付，还要执行：
+
+```text
+database/update_20260714_food_payment.sql
+```
+
+如果旧库需要使用邀请码推广计划，还要执行：
+
+```text
+database/update_20260714_promotion.sql
+```
+
+升级顺序是先执行数据库脚本，再重启新版后端。该脚本会为已有会员生成 `WG000001` 格式的唯一邀请码，不会清空会员、余额或订单数据。
+
 新部署建议直接执行完整的 `wangguantong.sql`。
 
 ## 三、修改后端数据库配置
@@ -89,7 +105,7 @@ spring:
 
 ```yaml
 server:
-  port: 8080
+  port: 8087
 ```
 
 ## 四、打包后端 Spring Boot
@@ -123,7 +139,7 @@ wangguantong-server/target/wangguantong-server-1.0.0.jar
 项目名称：wangguantong-server
 项目类型：Spring Boot
 项目 jar：/www/wwwroot/wangguantong/server/wangguantong-server-1.0.0.jar
-运行端口：8080
+运行端口：8087
 JDK版本：Java 17
 ```
 
@@ -133,16 +149,16 @@ JDK版本：Java 17
 可以在服务器终端测试：
 
 ```bash
-curl http://127.0.0.1:8080/dashboard/statistics
+curl http://127.0.0.1:8087/dashboard/statistics
 ```
 
 如果返回 JSON，说明后端启动成功。
 
 ## 六、打包前端 Vue
 
-前端生产环境建议通过 Nginx 代理 `/api` 到后端 `8080`，这样浏览器只访问同一个域名，不需要暴露后端端口。
+前端生产环境建议通过 Nginx 代理 `/api` 到后端 `8087`，这样浏览器只访问同一个域名，不需要暴露后端端口。
 
-注意：本地开发不要创建 `.env.production` 来启动 `npm run dev`，本地默认会请求 `http://localhost:8080`。宝塔部署才需要 `.env.production`。
+注意：本地开发不要创建 `.env.production` 来启动 `npm run dev`，本地默认通过 Vite 的 `/api` 代理请求 `8087`。宝塔部署才需要 `.env.production`。
 
 进入前端目录：
 
@@ -170,7 +186,7 @@ wangguantong-web/.env.development.example
 wangguantong-web/.env.production.example
 ```
 
-本地开发可以不用创建 `.env.development`，因为代码默认就是 `http://localhost:8080`。
+本地开发可以不用创建 `.env.development`，因为代码默认使用 `/api`，Vite 会转发到 `http://localhost:8087`。
 
 然后打包：
 
@@ -219,7 +235,7 @@ PHP版本：纯静态
 
 ```nginx
 location /api/ {
-    proxy_pass http://127.0.0.1:8080/;
+    proxy_pass http://127.0.0.1:8087/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -236,7 +252,7 @@ location / {
 这样前端请求 `/api/admin/login` 时，会被 Nginx 转发到：
 
 ```text
-http://127.0.0.1:8080/admin/login
+http://127.0.0.1:8087/admin/login
 ```
 
 ## 九、放行端口
@@ -248,15 +264,15 @@ http://127.0.0.1:8080/admin/login
 443
 ```
 
-后端 `8080` 可以不对外开放，只给服务器本机访问。
+后端 `8087` 可以不对外开放，只给服务器本机访问。
 
 如果你想直接访问后端接口，需要在服务器安全组和宝塔防火墙里放行：
 
 ```text
-8080
+8087
 ```
 
-课堂演示建议使用 Nginx 代理方式，不直接暴露 8080。
+课堂演示建议使用 Nginx 代理方式，不直接暴露 8087。
 
 ## 十、访问系统
 
@@ -353,7 +369,7 @@ VITE_API_BASE_URL=/api
 
 ```nginx
 location /api/ {
-    proxy_pass http://127.0.0.1:8080/;
+    proxy_pass http://127.0.0.1:8087/;
 }
 ```
 
@@ -378,7 +394,7 @@ location / {
 }
 ```
 
-### 4. 前端还是请求 localhost:8080
+### 4. 前端还是请求 localhost:8087
 
 说明前端打包时没有读取生产环境变量。
 
@@ -432,3 +448,13 @@ target/wangguantong-server-1.0.0.jar
 ```
 
 数据库脚本可以临时上传，用完后删除或备份。
+
+## 十四、配置真实支付
+
+微信和支付宝默认关闭，不配置时不影响余额支付。需要真实收款时，先为网站配置 HTTPS，再按照以下文档设置商户号、应用编号、密钥文件和异步回调地址：
+
+```text
+docs/payment-setup.md
+```
+
+密钥必须放在网站根目录之外，并通过宝塔 Java 项目环境变量传入。配置完成后重启后端。

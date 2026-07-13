@@ -43,6 +43,13 @@ public class ReservationRecordServiceImpl extends ServiceImpl<ReservationRecordM
         if (!"正常".equals(member.getStatus())) {
             throw new RuntimeException("会员状态不是正常，不能预约");
         }
+        long activeCount = count(new LambdaQueryWrapper<ReservationRecord>()
+                .eq(ReservationRecord::getMemberId, memberId)
+                .eq(ReservationRecord::getStatus, "已预约")
+                .ge(ReservationRecord::getReserveTime, LocalDateTime.now()));
+        if (activeCount > 0) {
+            throw new RuntimeException("您已有待上机的预约，请先使用或取消原预约");
+        }
 
         Computer computer = computerService.getById(computerId);
         if (computer == null) {
@@ -52,8 +59,8 @@ public class ReservationRecordServiceImpl extends ServiceImpl<ReservationRecordM
             throw new RuntimeException("只有空闲电脑可以预约锁定");
         }
 
-        LocalDateTime reserveTime = parseReserveTime(reserveTimeText);
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime reserveTime = parseReserveTime(reserveTimeText);
         if (reserveTime.isBefore(now)) {
             throw new RuntimeException("预约时间不能早于当前时间");
         }
@@ -78,10 +85,24 @@ public class ReservationRecordServiceImpl extends ServiceImpl<ReservationRecordM
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelReservation(Long id) {
+        cancelReservation(id, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelReservationForMember(Long id, Long memberId) {
+        if (memberId == null) {
+            throw new RuntimeException("用户信息不存在，请重新登录");
+        }
+        cancelReservation(id, memberId);
+    }
+
+    private void cancelReservation(Long id, Long expectedMemberId) {
         ReservationRecord record = getById(id);
         if (record == null) {
             throw new RuntimeException("预约记录不存在");
         }
+        checkReservationOwner(record, expectedMemberId);
         if (!"已预约".equals(record.getStatus())) {
             throw new RuntimeException("只有已预约记录可以取消");
         }
@@ -97,12 +118,26 @@ public class ReservationRecordServiceImpl extends ServiceImpl<ReservationRecordM
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = ReservationExpiredException.class)
     public void startFromReservation(Long id) {
+        startFromReservation(id, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = ReservationExpiredException.class)
+    public void startFromReservationForMember(Long id, Long memberId) {
+        if (memberId == null) {
+            throw new RuntimeException("用户信息不存在，请重新登录");
+        }
+        startFromReservation(id, memberId);
+    }
+
+    private void startFromReservation(Long id, Long expectedMemberId) {
         ReservationRecord record = getById(id);
         if (record == null) {
             throw new RuntimeException("预约记录不存在");
         }
+        checkReservationOwner(record, expectedMemberId);
         if (!"已预约".equals(record.getStatus())) {
             throw new RuntimeException("只有已预约记录可以上机");
         }
@@ -114,7 +149,7 @@ public class ReservationRecordServiceImpl extends ServiceImpl<ReservationRecordM
                 reservedComputer.setStatus("空闲");
                 computerService.updateById(reservedComputer);
             }
-            throw new RuntimeException("预约已超时，系统已自动取消");
+            throw new ReservationExpiredException("预约已超时，系统已自动取消");
         }
 
         Computer computer = computerService.getById(record.getComputerId());
@@ -132,6 +167,12 @@ public class ReservationRecordServiceImpl extends ServiceImpl<ReservationRecordM
 
         record.setStatus("已上机");
         updateById(record);
+    }
+
+    private void checkReservationOwner(ReservationRecord record, Long expectedMemberId) {
+        if (expectedMemberId != null && !expectedMemberId.equals(record.getMemberId())) {
+            throw new RuntimeException("只能操作本人预约的电脑");
+        }
     }
 
     @Override
@@ -159,5 +200,11 @@ public class ReservationRecordServiceImpl extends ServiceImpl<ReservationRecordM
             throw new RuntimeException("请选择预约时间");
         }
         return LocalDateTime.parse(reserveTimeText, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    private static class ReservationExpiredException extends RuntimeException {
+        ReservationExpiredException(String message) {
+            super(message);
+        }
     }
 }

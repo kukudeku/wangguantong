@@ -9,6 +9,7 @@ import com.chinasofti.wangguantong.entity.RechargeRecord;
 import com.chinasofti.wangguantong.service.FoodOrderService;
 import com.chinasofti.wangguantong.service.MemberService;
 import com.chinasofti.wangguantong.service.OnlineRecordService;
+import com.chinasofti.wangguantong.service.PromotionService;
 import com.chinasofti.wangguantong.service.RechargeRecordService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,15 +35,18 @@ public class UserController {
     private final RechargeRecordService rechargeRecordService;
     private final FoodOrderService foodOrderService;
     private final OnlineRecordService onlineRecordService;
+    private final PromotionService promotionService;
 
     public UserController(MemberService memberService,
                           RechargeRecordService rechargeRecordService,
                           FoodOrderService foodOrderService,
-                          OnlineRecordService onlineRecordService) {
+                          OnlineRecordService onlineRecordService,
+                          PromotionService promotionService) {
         this.memberService = memberService;
         this.rechargeRecordService = rechargeRecordService;
         this.foodOrderService = foodOrderService;
         this.onlineRecordService = onlineRecordService;
+        this.promotionService = promotionService;
     }
 
     @PostMapping("/login")
@@ -67,38 +71,11 @@ public class UserController {
 
     @PostMapping("/register")
     public Result<Member> register(@RequestBody Member member) {
-        if (!StringUtils.hasText(member.getName())) {
-            return Result.error("姓名不能为空");
+        try {
+            return Result.success(promotionService.register(member));
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
         }
-        if (!StringUtils.hasText(member.getIdCard())) {
-            return Result.error("身份证号不能为空");
-        }
-        if (!StringUtils.hasText(member.getPhone())) {
-            return Result.error("手机号不能为空");
-        }
-        if (!StringUtils.hasText(member.getPassword())) {
-            return Result.error("密码不能为空");
-        }
-        long idCardCount = memberService.count(new LambdaQueryWrapper<Member>()
-                .eq(Member::getIdCard, member.getIdCard()));
-        if (idCardCount > 0) {
-            return Result.error("该身份证号已注册");
-        }
-        long phoneCount = memberService.count(new LambdaQueryWrapper<Member>()
-                .eq(Member::getPhone, member.getPhone()));
-        if (phoneCount > 0) {
-            return Result.error("该手机号已注册");
-        }
-
-        member.setId(null);
-        member.setUsername(member.getIdCard());
-        member.setBalance(BigDecimal.ZERO);
-        member.setUserType("会员");
-        member.setMemberLevel("普通会员");
-        member.setStatus("正常");
-        member.setCreateTime(LocalDateTime.now());
-        memberService.save(member);
-        return Result.success(member);
     }
 
     @PostMapping("/change-password")
@@ -130,14 +107,21 @@ public class UserController {
         for (RechargeRecord record : rechargeList) {
             Map<String, Object> item = new HashMap<>();
             item.put("type", "充值");
-            item.put("description", "会员充值");
+            String rechargeType = StringUtils.hasText(record.getRechargeType()) ? record.getRechargeType() : "会员充值";
+            String referenceLabel = rechargeType.contains("邀请") || rechargeType.contains("新人") ? "邀请码" : "券码";
+            String reference = StringUtils.hasText(record.getReferenceNo())
+                    ? "（" + referenceLabel + "：" + record.getReferenceNo() + "）" : "";
+            item.put("description", rechargeType + reference);
             item.put("amount", record.getAmount());
             item.put("createTime", record.getCreateTime());
             list.add(item);
         }
 
         List<FoodOrder> foodOrders = foodOrderService.list(new LambdaQueryWrapper<FoodOrder>()
-                .eq(FoodOrder::getMemberId, memberId));
+                .eq(FoodOrder::getMemberId, memberId)
+                .and(wrapper -> wrapper.eq(FoodOrder::getPaymentMethod, "余额支付")
+                        .or().isNull(FoodOrder::getPaymentMethod)
+                        .or().eq(FoodOrder::getPaymentMethod, "")));
         for (FoodOrder order : foodOrders) {
             Map<String, Object> item = new HashMap<>();
             item.put("type", "点餐");
@@ -167,9 +151,11 @@ public class UserController {
 
     @GetMapping("/orders/{memberId}")
     public Result<List<FoodOrder>> orders(@PathVariable Long memberId) {
-        return Result.success(foodOrderService.list(new LambdaQueryWrapper<FoodOrder>()
+        List<FoodOrder> orders = foodOrderService.list(new LambdaQueryWrapper<FoodOrder>()
                 .eq(FoodOrder::getMemberId, memberId)
-                .orderByDesc(FoodOrder::getId)));
+                .orderByDesc(FoodOrder::getId));
+        foodOrderService.fillPaymentStatuses(orders);
+        return Result.success(orders);
     }
 
     @GetMapping("/online-records/{memberId}")

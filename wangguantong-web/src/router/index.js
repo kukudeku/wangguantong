@@ -9,6 +9,8 @@ import Food from '../views/food/index.vue'
 import Reservation from '../views/reservation/index.vue'
 import User from '../views/user/index.vue'
 import UserLogin from '../views/user-login/index.vue'
+import Coupon from '../views/coupon/index.vue'
+import Promotion from '../views/promotion/index.vue'
 
 const routes = [
   { path: '/', redirect: '/user' },
@@ -20,16 +22,22 @@ const routes = [
   { path: '/admin/member', component: Member },
   { path: '/admin/computer', component: Computer },
   { path: '/admin/recharge', component: Recharge },
+  { path: '/admin/voucher', component: Recharge },
   { path: '/admin/online', component: Online },
   { path: '/admin/food', component: Food },
+  { path: '/admin/coupon', component: Coupon },
+  { path: '/admin/promotion', component: Promotion },
   { path: '/admin/reservation', component: Reservation },
   { path: '/login', redirect: '/admin/login' },
   { path: '/dashboard', redirect: '/admin/dashboard' },
   { path: '/member', redirect: '/admin/member' },
   { path: '/computer', redirect: '/admin/computer' },
   { path: '/recharge', redirect: '/admin/recharge' },
+  { path: '/voucher', redirect: '/admin/voucher' },
   { path: '/online', redirect: '/admin/online' },
   { path: '/food', redirect: '/admin/food' },
+  { path: '/coupon', redirect: '/admin/coupon' },
+  { path: '/promotion', redirect: '/admin/promotion' },
   { path: '/reservation', redirect: '/admin/reservation' }
 ]
 

@@ -24,6 +24,12 @@ public class RechargeRecordServiceImpl extends ServiceImpl<RechargeRecordMapper,
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void recharge(Long memberId, BigDecimal amount) {
+        recharge(memberId, amount, "余额充值", null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void recharge(Long memberId, BigDecimal amount, String rechargeType, String referenceNo) {
         if (memberId == null) {
             throw new RuntimeException("请选择会员");
         }
@@ -50,6 +56,8 @@ public class RechargeRecordServiceImpl extends ServiceImpl<RechargeRecordMapper,
         record.setMemberId(member.getId());
         record.setMemberName(member.getName());
         record.setAmount(amount);
+        record.setRechargeType(rechargeType);
+        record.setReferenceNo(referenceNo);
         record.setCreateTime(LocalDateTime.now());
         save(record);
     }

@@ -2,10 +2,10 @@
 
 本项目现在支持两种运行方式：
 
-| 场景 | 前端启动方式 | 后端地址 | 说明 |
+| 场景 | 前端启动方式 | 接口转发 | 说明 |
 | --- | --- | --- | --- |
-| 本地开发 | `npm run dev` | `http://localhost:8080` | 适合自己电脑写代码、课堂演示 |
-| 宝塔部署 | `npm run build` | `/api` | 适合服务器 Nginx 反向代理 |
+| 本地开发 | `npm run dev` | Vite `/api` → `localhost:8087` | 适合自己电脑写代码、课堂演示 |
+| 宝塔部署 | `npm run build` | Nginx `/api` → `127.0.0.1:8087` | 适合服务器 Nginx 反向代理 |
 
 访问规则：
 
@@ -26,13 +26,13 @@ wangguantong-web/src/utils/request.js
 代码逻辑是：
 
 ```js
-baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+baseURL: import.meta.env.VITE_API_BASE_URL || '/api'
 ```
 
 意思是：
 
 - 如果配置了 `VITE_API_BASE_URL`，就用配置的地址。
-- 如果没有配置，就默认用 `http://localhost:8080`。
+- 如果没有配置，就默认用 `/api`，本地由 Vite 转发到 `8087`，宝塔由 Nginx 转发到 `8087`。
 
 ## 一、本地运行方式
 
@@ -76,7 +76,7 @@ mvn spring-boot:run
 后端地址：
 
 ```text
-http://localhost:8080
+http://localhost:8087
 ```
 
 ### 4. 启动前端
@@ -103,12 +103,12 @@ http://localhost:5173
 本地开发时，前端会请求：
 
 ```text
-http://localhost:8080
+http://localhost:8087
 ```
 
 ## 二、宝塔部署方式
 
-宝塔部署时，前端不能继续请求 `localhost:8080`。
+宝塔部署时，前端不能继续请求 `localhost:8087`。
 
 原因是：用户浏览器里的 `localhost` 指的是用户自己的电脑，不是你的服务器。
 
@@ -118,7 +118,7 @@ http://localhost:8080
 VITE_API_BASE_URL=/api
 ```
 
-然后用 Nginx 把 `/api` 转发到服务器本机的 `8080`。
+然后用 Nginx 把 `/api` 转发到服务器本机的 `8087`。
 
 ### 1. 创建生产环境配置
 
@@ -168,7 +168,7 @@ wangguantong-web/dist
 
 ```nginx
 location /api/ {
-    proxy_pass http://127.0.0.1:8080/;
+    proxy_pass http://127.0.0.1:8087/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -189,7 +189,7 @@ http://你的域名/api/admin/login
 实际会转发到：
 
 ```text
-http://127.0.0.1:8080/admin/login
+http://127.0.0.1:8087/admin/login
 ```
 
 ### 4. 宝塔启动后端
@@ -197,41 +197,41 @@ http://127.0.0.1:8080/admin/login
 后端仍然监听：
 
 ```text
-8080
+8087
 ```
 
 在宝塔 Java 项目管理器中添加：
 
 ```text
 项目类型：Spring Boot
-运行端口：8080
+运行端口：8087
 JDK版本：Java 17
 jar文件：wangguantong-server-1.0.0.jar
 ```
 
 ## 三、不要混用的地方
 
-### 本地开发不要写死 `/api`
+### 本地开发使用 Vite 代理
 
-本地开发如果你把前端地址写成 `/api`，但没有配置 Vite 代理，就会请求失败。
+项目已经在 `vite.config.js` 中配置 `/api` 代理到 `http://localhost:8087`。
 
 所以本地建议：
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=/api
 ```
 
-或者不创建 `.env.development`，让代码使用默认值。
+也可以不创建 `.env.development`，直接使用代码默认值 `/api`。
 
-### 宝塔部署不要写死 `localhost:8080`
+### 宝塔部署不要写死 `localhost:8087`
 
 宝塔部署如果前端打包成：
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=/api
 ```
 
-用户浏览器会请求用户自己电脑的 `localhost:8080`，肯定失败。
+用户浏览器会请求用户自己电脑的 `localhost:8087`，肯定失败。
 
 所以宝塔必须使用：
 
@@ -256,7 +256,7 @@ wangguantong-web/.env.development
 内容：
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8087
 ```
 
 宝塔部署：
@@ -294,7 +294,7 @@ http://localhost:5173
 宝塔验证：
 
 ```bash
-curl http://127.0.0.1:8080/dashboard/statistics
+curl http://127.0.0.1:8087/dashboard/statistics
 ```
 
 浏览器访问：
@@ -315,12 +315,41 @@ http://你的域名
 本地：
 
 ```text
-用户端 localhost:5173/ -> 后端 localhost:8080
-后台 localhost:5173/admin -> 后端 localhost:8080
+用户端 localhost:5173/ -> Vite /api -> 后端 localhost:8087
+后台 localhost:5173/admin -> Vite /api -> 后端 localhost:8087
 ```
 
 宝塔：
 
 ```text
-浏览器访问域名 -> Nginx /api -> 后端 127.0.0.1:8080
+浏览器访问域名 -> Nginx /api -> 后端 127.0.0.1:8087
 ```
+
+## 七、真实支付说明
+
+余额支付无需配置。微信支付和支付宝支付需要商户平台资料、公网 HTTPS 回调地址及服务器密钥文件，完整步骤见：
+
+```text
+docs/payment-setup.md
+```
+
+已有数据库还要执行：
+
+```text
+database/update_20260714_food_payment.sql
+database/update_20260714_promotion.sql
+```
+
+未配置商户资料时，后端仍可正常启动，余额支付和其他系统功能不受影响。
+
+## 八、推广计划数据库升级
+
+新安装项目直接执行 `database/wangguantong.sql`，其中已经包含推广规则、邀请码和邀请记录表。
+
+本地或宝塔已有数据库需要先执行：
+
+```text
+database/update_20260714_promotion.sql
+```
+
+再重启 Spring Boot 后端。升级脚本可以重复执行，会保留原有会员数据，并自动为已有会员生成唯一邀请码。默认规则为邀请人奖励 `10 元`、新用户奖励 `5 元`，管理员可在“营销活动 > 推广计划”中修改或停用。

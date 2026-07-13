@@ -17,7 +17,7 @@
       </a-space>
     </a-form>
 
-    <a-table class="no-wrap-table" :columns="columns" :data="tableData" row-key="id" :pagination="false">
+    <a-table class="no-wrap-table" :columns="columns" :data="tableData" row-key="id" :pagination="false" :scroll="{ x: 1280 }">
       <template #status="{ record }">
         <a-tag :color="record.status === '正常' ? 'green' : 'red'">{{ record.status }}</a-tag>
       </template>

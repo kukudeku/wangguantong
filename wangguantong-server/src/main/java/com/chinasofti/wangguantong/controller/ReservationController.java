@@ -44,9 +44,14 @@ public class ReservationController {
     }
 
     @PostMapping("/cancel/{id}")
-    public Result<Void> cancel(@PathVariable Long id) {
+    public Result<Void> cancel(@PathVariable Long id,
+                               @RequestParam(required = false) Long memberId) {
         try {
-            reservationRecordService.cancelReservation(id);
+            if (memberId == null) {
+                reservationRecordService.cancelReservation(id);
+            } else {
+                reservationRecordService.cancelReservationForMember(id, memberId);
+            }
             return Result.success();
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
@@ -54,9 +59,14 @@ public class ReservationController {
     }
 
     @PostMapping("/start/{id}")
-    public Result<Void> start(@PathVariable Long id) {
+    public Result<Void> start(@PathVariable Long id,
+                              @RequestParam(required = false) Long memberId) {
         try {
-            reservationRecordService.startFromReservation(id);
+            if (memberId == null) {
+                reservationRecordService.startFromReservation(id);
+            } else {
+                reservationRecordService.startFromReservationForMember(id, memberId);
+            }
             return Result.success();
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
@@ -66,11 +76,13 @@ public class ReservationController {
     @GetMapping("/list")
     public Result<List<ReservationRecord>> list(@RequestParam(required = false) String memberName,
                                                 @RequestParam(required = false) String computerNo,
-                                                @RequestParam(required = false) String status) {
+                                                @RequestParam(required = false) String status,
+                                                @RequestParam(required = false) Long memberId) {
         LambdaQueryWrapper<ReservationRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(memberName), ReservationRecord::getMemberName, memberName)
                 .like(StringUtils.hasText(computerNo), ReservationRecord::getComputerNo, computerNo)
                 .eq(StringUtils.hasText(status), ReservationRecord::getStatus, status)
+                .eq(memberId != null, ReservationRecord::getMemberId, memberId)
                 .orderByDesc(ReservationRecord::getId);
         return Result.success(reservationRecordService.list(wrapper));
     }

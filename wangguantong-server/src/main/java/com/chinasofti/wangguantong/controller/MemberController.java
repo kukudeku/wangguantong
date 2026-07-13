@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.chinasofti.wangguantong.common.Result;
 import com.chinasofti.wangguantong.entity.Member;
 import com.chinasofti.wangguantong.service.MemberService;
+import com.chinasofti.wangguantong.service.PromotionService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +25,11 @@ import java.util.List;
 public class MemberController {
 
     private final MemberService memberService;
+    private final PromotionService promotionService;
 
-    public MemberController(MemberService memberService) {
+    public MemberController(MemberService memberService, PromotionService promotionService) {
         this.memberService = memberService;
+        this.promotionService = promotionService;
     }
 
     @GetMapping("/list")
@@ -74,8 +77,11 @@ public class MemberController {
             member.setMemberLevel("普通会员");
         }
         member.setStatus("正常");
+        member.setInviteCode(null);
+        member.setInviterMemberId(null);
         member.setCreateTime(LocalDateTime.now());
         memberService.save(member);
+        promotionService.ensureInviteCode(member);
         return Result.success();
     }
 

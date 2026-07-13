@@ -1,7 +1,9 @@
 package com.chinasofti.wangguantong.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.chinasofti.wangguantong.dto.ChangeComputerResult;
 import com.chinasofti.wangguantong.entity.Computer;
 import com.chinasofti.wangguantong.entity.Member;
 import com.chinasofti.wangguantong.entity.OnlineRecord;
@@ -80,6 +82,9 @@ public class OnlineRecordServiceImpl extends ServiceImpl<OnlineRecordMapper, Onl
         record.setComputerId(computer.getId());
         record.setComputerNo(computer.getComputerNo());
         record.setStartTime(LocalDateTime.now());
+        record.setSegmentStartTime(record.getStartTime());
+        record.setSegmentPaidAmount(firstAmount);
+        record.setComputerHistory(computer.getComputerNo());
         record.setTotalAmount(firstAmount);
         record.setStatus("进行中");
         save(record);
@@ -121,6 +126,90 @@ public class OnlineRecordServiceImpl extends ServiceImpl<OnlineRecordMapper, Onl
 
         computer.setStatus("空闲");
         computerService.updateById(computer);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ChangeComputerResult changeComputer(Long recordId, Long targetComputerId) {
+        if (recordId == null || targetComputerId == null) {
+            throw new RuntimeException("请选择上机记录和目标电脑");
+        }
+        OnlineRecord record = getById(recordId);
+        if (record == null || !"进行中".equals(record.getStatus())) {
+            throw new RuntimeException("当前上机记录不存在或已结束");
+        }
+        if (targetComputerId.equals(record.getComputerId())) {
+            throw new RuntimeException("目标电脑不能与当前电脑相同");
+        }
+        Member member = memberService.getById(record.getMemberId());
+        Computer currentComputer = computerService.getById(record.getComputerId());
+        Computer targetComputer = computerService.getById(targetComputerId);
+        if (member == null || currentComputer == null) {
+            throw new RuntimeException("当前上机信息不完整");
+        }
+        if (targetComputer == null || !"空闲".equals(targetComputer.getStatus())) {
+            throw new RuntimeException("目标电脑不是空闲状态");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        settleRunningCharge(record, member, currentComputer, now);
+        if (!"进行中".equals(record.getStatus())) {
+            return changeResult(false, BigDecimal.ZERO, currentComputer, targetComputer,
+                    "余额不足，系统已自动下机");
+        }
+
+        BigDecimal currentHourlyAmount = calculateAmount(currentComputer.getPricePerHour(), 1, member);
+        BigDecimal targetHourlyAmount = calculateAmount(targetComputer.getPricePerHour(), 1, member);
+        BigDecimal extraAmount = targetHourlyAmount.subtract(currentHourlyAmount).max(BigDecimal.ZERO);
+        if (member.getBalance().compareTo(extraAmount) < 0) {
+            return changeResult(false, extraAmount, currentComputer, targetComputer,
+                    "余额不足以支付换机差价 " + extraAmount + " 元");
+        }
+        boolean targetClaimed = computerService.update(new LambdaUpdateWrapper<Computer>()
+                .eq(Computer::getId, targetComputer.getId())
+                .eq(Computer::getStatus, "空闲")
+                .set(Computer::getStatus, "使用中"));
+        if (!targetClaimed) {
+            throw new RuntimeException("目标电脑已被占用，请选择其他电脑");
+        }
+
+        if (extraAmount.compareTo(BigDecimal.ZERO) > 0) {
+            member.setBalance(member.getBalance().subtract(extraAmount));
+            memberService.updateById(member);
+        }
+
+        String history = record.getComputerHistory();
+        if (history == null || history.trim().isEmpty()) {
+            history = currentComputer.getComputerNo();
+        }
+        record.setComputerHistory(history + " -> " + targetComputer.getComputerNo());
+        record.setComputerId(targetComputer.getId());
+        record.setComputerNo(targetComputer.getComputerNo());
+        record.setSegmentStartTime(now);
+        record.setSegmentPaidAmount(targetHourlyAmount);
+        record.setTotalAmount(defaultAmount(record.getTotalAmount()).add(extraAmount));
+        updateById(record);
+
+        currentComputer.setStatus("空闲");
+        computerService.updateById(currentComputer);
+        String message = extraAmount.compareTo(BigDecimal.ZERO) > 0
+                ? "换机成功，已补差价 " + extraAmount + " 元"
+                : "换机成功，本次免费换机";
+        return changeResult(true, extraAmount, currentComputer, targetComputer, message);
+    }
+
+    private ChangeComputerResult changeResult(boolean changed,
+                                               BigDecimal extraAmount,
+                                               Computer sourceComputer,
+                                               Computer targetComputer,
+                                               String message) {
+        ChangeComputerResult result = new ChangeComputerResult();
+        result.setChanged(changed);
+        result.setExtraAmount(extraAmount);
+        result.setSourceComputerNo(sourceComputer == null ? null : sourceComputer.getComputerNo());
+        result.setTargetComputerNo(targetComputer == null ? null : targetComputer.getComputerNo());
+        result.setMessage(message);
+        return result;
     }
 
     @Override
@@ -187,9 +276,10 @@ public class OnlineRecordServiceImpl extends ServiceImpl<OnlineRecordMapper, Onl
                 record.setWarningMessage("余额不足，系统已自动下机");
                 return;
             }
-            BigDecimal paidAmount = record.getTotalAmount() == null ? BigDecimal.ZERO : record.getTotalAmount();
-            BigDecimal nextAmount = calculateAmount(computer.getPricePerHour(), hours + 1, member);
-            BigDecimal pendingAmount = nextAmount.subtract(paidAmount);
+            long segmentHours = calculateChargeHours(getSegmentStartTime(record), now);
+            BigDecimal segmentPaidAmount = getSegmentPaidAmount(record);
+            BigDecimal nextAmount = calculateAmount(computer.getPricePerHour(), segmentHours + 1, member);
+            BigDecimal pendingAmount = nextAmount.subtract(segmentPaidAmount);
             record.setBalanceEnough(pendingAmount.compareTo(BigDecimal.ZERO) <= 0 || member.getBalance().compareTo(pendingAmount) >= 0);
             if (!record.getBalanceEnough()) {
                 record.setWarningMessage("当前余额不足以支付下一计费小时，请及时充值");
@@ -208,31 +298,51 @@ public class OnlineRecordServiceImpl extends ServiceImpl<OnlineRecordMapper, Onl
     }
 
     private BigDecimal settleRunningCharge(OnlineRecord record, Member member, Computer computer, LocalDateTime now) {
-        long minutes = Duration.between(record.getStartTime(), now).toMinutes();
-        long hours = (long) Math.ceil(minutes / 60.0);
-        if (hours < 1) {
-            hours = 1;
-        }
-
-        BigDecimal currentAmount = calculateAmount(computer.getPricePerHour(), hours, member);
-        BigDecimal paidAmount = record.getTotalAmount() == null ? BigDecimal.ZERO : record.getTotalAmount();
-        BigDecimal pendingAmount = currentAmount.subtract(paidAmount);
+        long segmentHours = calculateChargeHours(getSegmentStartTime(record), now);
+        BigDecimal segmentAmount = calculateAmount(computer.getPricePerHour(), segmentHours, member);
+        BigDecimal segmentPaidAmount = getSegmentPaidAmount(record);
+        BigDecimal pendingAmount = segmentAmount.subtract(segmentPaidAmount);
 
         if (pendingAmount.compareTo(BigDecimal.ZERO) > 0) {
             if (member.getBalance().compareTo(pendingAmount) < 0) {
                 autoEndForInsufficientBalance(record, computer, now);
                 record.setBalanceEnough(false);
                 record.setWarningMessage("余额不足，系统已自动下机");
-                return paidAmount;
+                return defaultAmount(record.getTotalAmount());
             }
             member.setBalance(member.getBalance().subtract(pendingAmount));
             memberService.updateById(member);
 
-            record.setTotalAmount(currentAmount);
+            record.setTotalAmount(defaultAmount(record.getTotalAmount()).add(pendingAmount));
+            record.setSegmentPaidAmount(segmentAmount);
+            if (record.getSegmentStartTime() == null) {
+                record.setSegmentStartTime(record.getStartTime());
+            }
             updateById(record);
         }
 
-        return currentAmount;
+        return defaultAmount(record.getTotalAmount());
+    }
+
+    private LocalDateTime getSegmentStartTime(OnlineRecord record) {
+        return record.getSegmentStartTime() == null ? record.getStartTime() : record.getSegmentStartTime();
+    }
+
+    private BigDecimal getSegmentPaidAmount(OnlineRecord record) {
+        if (record.getSegmentPaidAmount() != null) {
+            return record.getSegmentPaidAmount();
+        }
+        return defaultAmount(record.getTotalAmount());
+    }
+
+    private long calculateChargeHours(LocalDateTime startTime, LocalDateTime endTime) {
+        long minutes = Duration.between(startTime, endTime).toMinutes();
+        long hours = (long) Math.ceil(minutes / 60.0);
+        return Math.max(hours, 1);
+    }
+
+    private BigDecimal defaultAmount(BigDecimal amount) {
+        return amount == null ? BigDecimal.ZERO : amount;
     }
 
     private void autoEndForInsufficientBalance(OnlineRecord record, Computer computer, LocalDateTime endTime) {

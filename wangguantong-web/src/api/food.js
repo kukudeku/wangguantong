@@ -24,6 +24,10 @@ export function addFoodOrder(data) {
   return request.post('/food/order/add', data)
 }
 
+export function addFoodOrderBatch(data) {
+  return request.post('/food/order/batch', data)
+}
+
 export function cancelFoodOrder(id) {
   return request.post(`/food/order/cancel/${id}`)
 }
@@ -34,4 +38,21 @@ export function completeFoodOrder(id) {
 
 export function getFoodOrders(params) {
   return request.get('/food/order/list', { params })
+}
+
+export function getPaymentStatus(outTradeNo) {
+  return request.get(`/payment/status/${encodeURIComponent(outTradeNo)}`)
+}
+
+function paymentUrl(path) {
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
+  return `${baseUrl}${path}`
+}
+
+export function getWechatPaymentQrCodeUrl(outTradeNo) {
+  return paymentUrl(`/payment/wechat/qrcode/${encodeURIComponent(outTradeNo)}`)
+}
+
+export function getAlipayPaymentPageUrl(outTradeNo) {
+  return paymentUrl(`/payment/alipay/page/${encodeURIComponent(outTradeNo)}`)
 }

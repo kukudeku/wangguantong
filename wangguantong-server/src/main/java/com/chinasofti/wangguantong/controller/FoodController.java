@@ -2,6 +2,8 @@ package com.chinasofti.wangguantong.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.chinasofti.wangguantong.common.Result;
+import com.chinasofti.wangguantong.dto.FoodOrderBatchRequest;
+import com.chinasofti.wangguantong.dto.PaymentCreateResponse;
 import com.chinasofti.wangguantong.entity.FoodItem;
 import com.chinasofti.wangguantong.entity.FoodOrder;
 import com.chinasofti.wangguantong.service.FoodItemService;
@@ -91,10 +93,18 @@ public class FoodController {
     }
 
     @PostMapping("/order/add")
-    public Result<Void> addOrder(@RequestBody FoodOrder order) {
+    public Result<PaymentCreateResponse> addOrder(@RequestBody FoodOrder order) {
         try {
-            foodOrderService.createOrder(order);
-            return Result.success();
+            return Result.success(foodOrderService.createOrder(order));
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/order/batch")
+    public Result<PaymentCreateResponse> batchOrder(@RequestBody FoodOrderBatchRequest request) {
+        try {
+            return Result.success(foodOrderService.createBatchOrder(request));
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }
@@ -122,11 +132,15 @@ public class FoodController {
 
     @GetMapping("/order/list")
     public Result<List<FoodOrder>> orderList(@RequestParam(required = false) String customerName,
-                                             @RequestParam(required = false) String status) {
+                                             @RequestParam(required = false) String status,
+                                             @RequestParam(required = false) String paymentMethod) {
         LambdaQueryWrapper<FoodOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(customerName), FoodOrder::getCustomerName, customerName)
                 .eq(StringUtils.hasText(status), FoodOrder::getStatus, status)
+                .eq(StringUtils.hasText(paymentMethod), FoodOrder::getPaymentMethod, paymentMethod)
                 .orderByDesc(FoodOrder::getId);
-        return Result.success(foodOrderService.list(wrapper));
+        List<FoodOrder> orders = foodOrderService.list(wrapper);
+        foodOrderService.fillPaymentStatuses(orders);
+        return Result.success(orders);
     }
 }

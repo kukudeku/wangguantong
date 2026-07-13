@@ -24,7 +24,7 @@
           </div>
           <div>
             <IconApps />
-            <section><strong>自助点餐</strong><span>选择商品，使用会员余额下单</span></section>
+            <section><strong>自助点餐</strong><span>选择商品和支付方式后下单</span></section>
           </div>
           <div>
             <IconList />
@@ -69,6 +69,9 @@
           <a-form-item label="密码">
             <a-input-password v-model="registerForm.password" placeholder="请设置登录密码" size="large" />
           </a-form-item>
+          <a-form-item label="邀请码（选填）">
+            <a-input v-model="registerForm.invitationCode" allow-clear placeholder="填写好友邀请码，注册后双方得奖励" size="large" />
+          </a-form-item>
           <a-button type="primary" long size="large" @click="handleRegister">注册并登录</a-button>
         </a-form>
 
@@ -98,7 +101,8 @@ const registerForm = reactive({
   name: '',
   idCard: '',
   phone: '',
-  password: ''
+  password: '',
+  invitationCode: ''
 })
 
 async function handleLogin() {

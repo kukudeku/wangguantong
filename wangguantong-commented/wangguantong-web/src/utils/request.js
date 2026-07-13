@@ -3,8 +3,8 @@ import { Message } from '@arco-design/web-vue'
 
 // 创建全项目共用的 Axios 请求对象。
 const request = axios.create({
-  // 宝塔部署时可通过 VITE_API_BASE_URL 指向线上后端；本地默认访问 8080 端口。
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  // 本地和宝塔都请求同源 /api，再分别由 Vite 或 Nginx 转发到 8087 后端。
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   // 10 秒仍未返回就中止请求，避免页面无限等待。
   timeout: 10000
 })

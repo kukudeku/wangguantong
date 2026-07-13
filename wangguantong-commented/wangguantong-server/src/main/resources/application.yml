@@ -1,6 +1,6 @@
-# 后端 Web 服务监听端口；启动后接口地址以 http://localhost:8080 开头。
+# 后端 Web 服务监听端口；启动后接口地址以 http://localhost:8087 开头。
 server:
-  port: 8080
+  port: 8087
 
 spring:
   # MySQL 数据源配置。部署到其他电脑时，通常只需要修改这里的地址、账号和密码。

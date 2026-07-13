@@ -9,7 +9,11 @@ public interface ReservationRecordService extends IService<ReservationRecord> {
 
     void cancelReservation(Long id);
 
+    void cancelReservationForMember(Long id, Long memberId);
+
     void startFromReservation(Long id);
+
+    void startFromReservationForMember(Long id, Long memberId);
 
     void expireReservations();
 }

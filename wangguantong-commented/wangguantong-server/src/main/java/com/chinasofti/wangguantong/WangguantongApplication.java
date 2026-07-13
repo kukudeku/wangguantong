@@ -23,7 +23,7 @@ public class WangguantongApplication {
 
     /**
      * Java 程序的主入口。运行此方法后，内置 Tomcat 默认监听 application.yml
-     * 中配置的 8080 端口。
+     * 中配置的 8087 端口。
      */
     public static void main(String[] args) {
         SpringApplication.run(WangguantongApplication.class, args);

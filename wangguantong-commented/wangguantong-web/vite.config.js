@@ -7,6 +7,14 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     // 本地执行 npm run dev 后，通过 http://localhost:5173 访问前端。
-    port: 5173
+    port: 5173,
+    // 浏览器只请求同源的 /api，由 Vite 转发到 8087 后端，避免跨域问题。
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8087',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })

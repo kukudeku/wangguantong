@@ -1,0 +1,10 @@
+# 本地支付密钥和环境变量不得提交到 Git。
+secrets/
+*.pem
+*.key
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+!**/.env.development.example
+!**/.env.production.example

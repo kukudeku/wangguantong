@@ -2,67 +2,331 @@
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#app {
+  width: 100%;
+  min-height: 100%;
   margin: 0;
+}
+
+body {
   color: #1d2129;
   background: #f2f3f5;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
 }
 
-.page-card {
-  min-height: calc(100vh - 112px);
+button,
+input,
+textarea,
+select {
+  letter-spacing: 0;
 }
 
-.toolbar {
+.admin-shell .page-card {
+  min-height: calc(100vh - 128px);
+  border: 0;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.admin-shell .page-card > .arco-card-header {
+  min-height: 58px;
+  padding: 0 20px;
+  border-bottom: 1px solid #f2f3f5;
+}
+
+.admin-shell .page-card > .arco-card-header .arco-card-header-title {
+  color: #1d2129;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-shell .page-card > .arco-card-body {
+  padding: 20px;
+}
+
+.admin-shell .toolbar {
+  min-height: 52px;
   margin-bottom: 16px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid #f2f3f5;
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  row-gap: 16px;
+  gap: 0;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 8px;
+.admin-shell .toolbar + .toolbar {
+  margin-top: 4px;
+}
+
+.admin-shell .toolbar .arco-form-item {
+  margin-right: 16px;
+  margin-bottom: 0;
+}
+
+.admin-shell .toolbar .arco-form-item-label-col {
+  padding-bottom: 6px;
+  color: #4e5969;
+  font-size: 13px;
+}
+
+.admin-shell .toolbar .arco-space {
   flex-wrap: nowrap;
-  align-items: center;
+}
+
+.admin-shell .toolbar .arco-btn {
   white-space: nowrap;
 }
 
-.action-buttons .arco-btn,
-.action-buttons .arco-trigger,
-.action-buttons .arco-popconfirm,
-.no-wrap-table .arco-btn {
+.admin-shell .action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.admin-shell .action-buttons .arco-btn,
+.admin-shell .action-buttons .arco-trigger,
+.admin-shell .action-buttons .arco-popconfirm,
+.admin-shell .no-wrap-table .arco-btn {
   flex: 0 0 auto;
   white-space: nowrap;
 }
 
-.stat-grid {
+.admin-shell .arco-btn {
+  border-radius: 3px;
+}
+
+.admin-shell .arco-btn-primary {
+  box-shadow: none;
+}
+
+.admin-shell .arco-input-wrapper,
+.admin-shell .arco-select-view,
+.admin-shell .arco-input-number,
+.admin-shell .arco-picker {
+  border: 1px solid #c9cdd4;
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.admin-shell .toolbar .arco-input-wrapper,
+.admin-shell .toolbar .arco-select-view,
+.admin-shell .toolbar .arco-input-number,
+.admin-shell .toolbar .arco-picker {
+  background: #f7f8fa;
+}
+
+.admin-shell .arco-input-wrapper.arco-input-focus,
+.admin-shell .arco-select-view-focus,
+.admin-shell .arco-input-number-focus,
+.admin-shell .arco-picker-focused {
+  border-color: #165dff;
+  box-shadow: 0 0 0 2px #e8f3ff;
+}
+
+.admin-shell .arco-input-wrapper:hover,
+.admin-shell .arco-select-view:hover,
+.admin-shell .arco-input-number:hover,
+.admin-shell .arco-picker:hover {
+  border-color: #94bfff;
+}
+
+.admin-shell .arco-tabs-nav::before {
+  background: #f2f3f5;
+}
+
+.admin-shell .arco-tabs-tab {
+  padding: 0 4px 13px;
+  font-weight: 500;
+}
+
+.admin-shell .arco-tabs-content {
+  padding-top: 18px;
+}
+
+.admin-shell .no-wrap-table {
+  width: 100%;
+  border: 1px solid #f2f3f5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.admin-shell .no-wrap-table .arco-table-container {
+  max-width: 100%;
+}
+
+.admin-shell .no-wrap-table .arco-table-th,
+.admin-shell .no-wrap-table .arco-table-td,
+.admin-shell .no-wrap-table .arco-table-cell {
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.admin-shell .no-wrap-table .arco-table-th {
+  height: 44px;
+  color: #4e5969;
+  background: #f7f8fa;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.admin-shell .no-wrap-table .arco-table-td {
+  height: 48px;
+  color: #1d2129;
+  border-color: #f2f3f5;
+}
+
+.admin-shell .no-wrap-table .arco-table-tr:hover .arco-table-td {
+  background: #f7f8fa;
+}
+
+.admin-shell .no-wrap-table .arco-table-border-cell {
+  border-right-color: #f2f3f5;
+}
+
+.admin-shell .arco-tag {
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.admin-shell .arco-alert {
+  border-radius: 3px;
+}
+
+.admin-shell .stat-grid {
+  border: 1px solid #f2f3f5;
+  border-radius: 4px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
 }
 
-.stat-card {
-  border: 1px solid #e5e6eb;
+.admin-shell .stat-card {
+  min-width: 0;
+  min-height: 102px;
+  padding: 20px;
+  border-right: 1px solid #f2f3f5;
+  background: #ffffff;
 }
 
-.stat-label {
+.admin-shell .stat-card:last-child {
+  border-right: 0;
+}
+
+.admin-shell .stat-label {
   color: #86909c;
-  font-size: 14px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
-.stat-value {
+.admin-shell .stat-value {
   margin-top: 10px;
-  color: #165dff;
-  font-size: 28px;
+  color: #1d2129;
+  font-size: 26px;
+  line-height: 1.2;
   font-weight: 600;
+  white-space: nowrap;
 }
 
-.warning-text {
+.admin-shell .warning-text {
   color: #f53f3f;
   font-weight: 600;
 }
 
-.no-wrap-table .arco-table-th,
-.no-wrap-table .arco-table-td,
-.no-wrap-table .arco-table-cell {
-  white-space: nowrap;
-  word-break: keep-all;
+.admin-shell .form-tip {
+  margin-top: 6px;
+  color: #86909c;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1280px) {
+  .admin-shell .stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-shell .stat-card:nth-child(3n) {
+    border-right: 0;
+  }
+
+  .admin-shell .stat-card:nth-child(-n + 3) {
+    border-bottom: 1px solid #f2f3f5;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-shell .page-card {
+    min-height: calc(100vh - 122px);
+  }
+
+  .admin-shell .page-card > .arco-card-header {
+    padding: 0 16px;
+  }
+
+  .admin-shell .page-card > .arco-card-body {
+    padding: 16px;
+  }
+
+  .admin-shell .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-shell .toolbar .arco-form-item {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+
+  .admin-shell .toolbar .arco-form-item-content,
+  .admin-shell .toolbar .arco-input-wrapper,
+  .admin-shell .toolbar .arco-select-view,
+  .admin-shell .toolbar .arco-input-number,
+  .admin-shell .toolbar .arco-picker {
+    width: 100% !important;
+  }
+
+  .admin-shell .toolbar > .arco-btn {
+    align-self: flex-start;
+  }
+
+  .admin-shell .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-shell .stat-card,
+  .admin-shell .stat-card:nth-child(3n) {
+    border-right: 1px solid #f2f3f5;
+    border-bottom: 1px solid #f2f3f5;
+  }
+
+  .admin-shell .stat-card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .admin-shell .stat-card:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

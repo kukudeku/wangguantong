@@ -1,6 +1,7 @@
 package com.chinasofti.wangguantong.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -21,7 +22,13 @@ public class Member {
     private String userType;
     private String memberLevel;
     private String status;
+    private String inviteCode;
+    private Long inviterMemberId;
     private LocalDateTime createTime;
+
+    // 注册表单填写的邀请码不属于 member 表字段，只用于注册时校验和发奖。
+    @TableField(exist = false)
+    private String invitationCode;
 
     public Long getId() {
         return id;
@@ -101,6 +108,30 @@ public class Member {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getInviteCode() {
+        return inviteCode;
+    }
+
+    public void setInviteCode(String inviteCode) {
+        this.inviteCode = inviteCode;
+    }
+
+    public Long getInviterMemberId() {
+        return inviterMemberId;
+    }
+
+    public void setInviterMemberId(Long inviterMemberId) {
+        this.inviterMemberId = inviterMemberId;
+    }
+
+    public String getInvitationCode() {
+        return invitationCode;
+    }
+
+    public void setInvitationCode(String invitationCode) {
+        this.invitationCode = invitationCode;
     }
 
     public LocalDateTime getCreateTime() {

@@ -1,10 +1,10 @@
 <template>
   <a-card class="page-card" title="首页数据看板">
     <div class="stat-grid">
-      <a-card class="stat-card" v-for="item in statItems" :key="item.label">
+      <div class="stat-card" v-for="item in statItems" :key="item.label">
         <div class="stat-label">{{ item.label }}</div>
         <div class="stat-value">{{ item.value }}</div>
-      </a-card>
+      </div>
     </div>
 
     <a-divider />
@@ -106,7 +106,8 @@ onMounted(async () => {
 
 .seat-map-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .seat-legend {
@@ -153,10 +154,13 @@ onMounted(async () => {
 }
 
 .seat-area {
-  padding: 16px;
-  border: 1px solid #e5e6eb;
-  border-radius: 8px;
-  background: #fbfcff;
+  padding: 2px 0 18px;
+  border-bottom: 1px solid #f2f3f5;
+}
+
+.seat-area:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .seat-area-title {
@@ -182,7 +186,7 @@ onMounted(async () => {
   min-height: 84px;
   padding: 12px;
   border: 1px solid #e5e6eb;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #ffffff;
   display: flex;
   flex-direction: column;
