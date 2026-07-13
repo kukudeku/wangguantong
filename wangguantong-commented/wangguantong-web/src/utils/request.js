@@ -20,10 +20,16 @@ request.interceptors.response.use(
     Message.error(result.message || '请求失败')
     return Promise.reject(new Error(result.message || '请求失败'))
   },
-  () => {
-    // 此分支处理断网、后端未启动、请求超时等没有正常业务响应的情况。
-    Message.error('服务器连接失败')
-    return Promise.reject(new Error('服务器连接失败'))
+  (error) => {
+    // 宝塔常见的 404 是 /api 代理缺失，502/503 则表示 8087 后端没有正常运行。
+    const status = error.response?.status
+    const message = status === 404
+      ? '接口地址不存在，请检查宝塔 /api 反向代理'
+      : status === 502 || status === 503
+        ? '后端服务未启动，请检查 8087 端口'
+        : '服务器连接失败'
+    Message.error(message)
+    return Promise.reject(new Error(message))
   }
 )
 

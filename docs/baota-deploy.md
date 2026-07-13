@@ -375,6 +375,17 @@ location /api/ {
 
 检查后端是否已启动。
 
+在宝塔终端依次执行：
+
+```bash
+curl http://127.0.0.1:8087/dashboard/statistics
+curl http://你的域名/api/dashboard/statistics
+```
+
+- 第一条失败：后端 jar 未启动、仍使用旧端口，或数据库连接失败。
+- 第一条成功、第二条失败：Nginx 的 `/api/` 反向代理未配置或未重载。
+- 两条都成功：重新构建前端并上传最新 `dist`，不要上传项目源码目录代替 `dist`。
+
 ### 2. 后端启动失败，提示数据库连接失败
 
 检查：
