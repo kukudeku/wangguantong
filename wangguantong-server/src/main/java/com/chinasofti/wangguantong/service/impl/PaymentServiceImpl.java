@@ -85,6 +85,8 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String PARTIAL_REFUND = "部分退款";
     private static final String REFUNDING = "退款中";
     private static final String REFUNDED = "已退款";
+    private static final DateTimeFormatter WECHAT_RFC3339_SECONDS =
+            DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssXXX");
 
     private final PaymentProperties properties;
     private final PaymentRecordMapper paymentRecordMapper;
@@ -408,8 +410,7 @@ public class PaymentServiceImpl implements PaymentService {
         request.setDescription("网管通点餐-" + record.getOrderBatchNo());
         request.setOutTradeNo(record.getOutTradeNo());
         request.setNotifyUrl(wechat.getNotifyUrl());
-        request.setTimeExpire(record.getExpireTime().atZone(ZoneId.systemDefault())
-                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        request.setTimeExpire(formatWechatExpireTime(record.getExpireTime(), ZoneId.systemDefault()));
         com.wechat.pay.java.service.payments.nativepay.model.Amount amount =
                 new com.wechat.pay.java.service.payments.nativepay.model.Amount();
         amount.setTotal(Math.toIntExact(toCents(record.getAmount())));
@@ -774,6 +775,10 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (DateTimeParseException e) {
             return LocalDateTime.now();
         }
+    }
+
+    static String formatWechatExpireTime(LocalDateTime expireTime, ZoneId zoneId) {
+        return expireTime.atZone(zoneId).format(WECHAT_RFC3339_SECONDS);
     }
 
     private String readKeyFile(String path) throws IOException {
