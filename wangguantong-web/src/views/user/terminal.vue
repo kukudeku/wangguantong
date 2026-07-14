@@ -44,10 +44,29 @@
           <IconGift />
           <span>签到领券</span>
         </button>
-        <button :class="{ active: activeTab === 'promotion' }" @click="openPrimaryPage('promotion')">
-          <IconUserAdd />
-          <span>推广计划</span>
-        </button>
+        <div class="wt-nav-group" :class="{ expanded: promotionMenuExpanded }">
+          <button
+            type="button"
+            class="wt-nav-parent"
+            :class="{ 'child-active': isPromotionPage }"
+            :aria-expanded="promotionMenuExpanded"
+            @click="togglePromotionMenu"
+          >
+            <IconUserAdd />
+            <span>推广计划</span>
+            <span class="wt-nav-meta"><IconDown class="wt-nav-arrow" /></span>
+          </button>
+          <div v-show="promotionMenuExpanded" class="wt-subnav">
+            <button type="button" :class="{ active: activeTab === 'promotion' }" :aria-current="activeTab === 'promotion' ? 'page' : undefined" @click="openPromotionInvite">
+              <IconUserAdd />
+              <span>邀请好友</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'promotion-record' }" :aria-current="activeTab === 'promotion-record' ? 'page' : undefined" @click="openPromotionRecords">
+              <IconHistory />
+              <span>邀请记录</span>
+            </button>
+          </div>
+        </div>
         <div class="wt-nav-group" :class="{ expanded: balanceMenuExpanded }">
           <button
             type="button"
@@ -519,22 +538,6 @@
               <div><b>3</b><span><strong>奖励自动到账</strong><small>可在余额明细查看</small></span></div>
             </div>
 
-            <div class="wt-promotion-record-head">
-              <div><h3>邀请记录</h3><p>已成功邀请 {{ promotionInfo.invitedCount || 0 }} 位好友</p></div>
-              <button class="wt-text-button" @click="loadPromotionData">刷新</button>
-            </div>
-            <a-table
-              class="no-wrap-table wt-record-table"
-              :columns="promotionColumns"
-              :data="promotionInfo.records || []"
-              row-key="id"
-              :pagination="false"
-              :scroll="{ x: 680 }"
-            >
-              <template #reward="{ record }">+￥{{ money(record.inviterReward) }}</template>
-              <template #status="{ record }"><a-tag color="green">{{ record.status }}</a-tag></template>
-              <template #createTime="{ record }">{{ formatDateTime(record.createTime) }}</template>
-            </a-table>
           </div>
 
           <aside class="wt-rail wt-promotion-rail">
@@ -550,6 +553,40 @@
               <p>奖励金额以好友注册成功时的活动规则为准。</p>
             </div>
           </aside>
+        </section>
+
+        <section v-if="activeTab === 'promotion-record'" class="wt-surface wt-record-surface wt-promotion-record-surface">
+          <div class="wt-record-summary wt-promotion-record-summary">
+            <div>
+              <span>成功邀请</span>
+              <strong>{{ promotionInfo.invitedCount || 0 }} 人</strong>
+            </div>
+            <div>
+              <span>累计奖励</span>
+              <strong>￥{{ money(promotionInfo.totalReward) }}</strong>
+            </div>
+          </div>
+
+          <div class="wt-record-toolbar">
+            <div>
+              <h2>邀请记录</h2>
+              <p>查看好友注册与奖励到账记录</p>
+            </div>
+            <a-button @click="loadPromotionData">刷新</a-button>
+          </div>
+
+          <a-table
+            class="no-wrap-table wt-record-table"
+            :columns="promotionColumns"
+            :data="promotionInfo.records || []"
+            row-key="id"
+            :pagination="false"
+            :scroll="{ x: 680 }"
+          >
+            <template #reward="{ record }">+￥{{ money(record.inviterReward) }}</template>
+            <template #status="{ record }"><a-tag color="green">{{ record.status }}</a-tag></template>
+            <template #createTime="{ record }">{{ formatDateTime(record.createTime) }}</template>
+          </a-table>
         </section>
 
         <section v-if="activeTab === 'balance'" class="wt-surface wt-record-surface">
@@ -872,6 +909,7 @@ const router = useRouter()
 const activeTab = ref('seat')
 const recordTab = ref('balance')
 const foodMenuExpanded = ref(false)
+const promotionMenuExpanded = ref(false)
 const balanceMenuExpanded = ref(false)
 const selectedFoodCategory = ref('全部')
 const currentMember = ref(getStoredUser())
@@ -974,13 +1012,15 @@ const discountText = computed(() => {
 })
 
 const isFoodPage = computed(() => activeTab.value === 'food' || activeTab.value === 'food-order')
+const isPromotionPage = computed(() => activeTab.value === 'promotion' || activeTab.value === 'promotion-record')
 const isBalancePage = computed(() => activeTab.value === 'balance' || activeTab.value === 'voucher')
 
 const pageTitle = computed(() => {
   if (activeTab.value === 'food') return '自助点餐'
   if (activeTab.value === 'food-order') return '订单记录'
   if (activeTab.value === 'coupon') return '签到领券'
-  if (activeTab.value === 'promotion') return '推广计划'
+  if (activeTab.value === 'promotion') return '邀请好友'
+  if (activeTab.value === 'promotion-record') return '邀请记录'
   if (activeTab.value === 'balance') return '余额账户'
   if (activeTab.value === 'voucher') return '团购验券'
   return '座位与上机'
@@ -991,6 +1031,7 @@ const pageSubtitle = computed(() => {
   if (activeTab.value === 'food-order') return '查看点餐订单、支付状态和处理进度'
   if (activeTab.value === 'coupon') return '每日签到，连续天数越多奖励越高'
   if (activeTab.value === 'promotion') return '邀请好友注册，双方领取余额奖励'
+  if (activeTab.value === 'promotion-record') return '查看邀请成功记录和奖励明细'
   if (activeTab.value === 'balance') return '充值余额并查看账户明细'
   if (activeTab.value === 'voucher') return '核销有效团购券，金额自动充入余额'
   if (currentRunningRecord.value) return '当前已有电脑正在使用，可在本页自助下机'
@@ -1236,12 +1277,14 @@ function logout() {
 
 function openFoodProducts() {
   foodMenuExpanded.value = true
+  promotionMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'food'
 }
 
 function openFoodOrders() {
   foodMenuExpanded.value = true
+  promotionMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'food-order'
   loadUserRecords()
@@ -1249,23 +1292,55 @@ function openFoodOrders() {
 
 function toggleFoodMenu() {
   foodMenuExpanded.value = !foodMenuExpanded.value
-  if (foodMenuExpanded.value) balanceMenuExpanded.value = false
+  if (foodMenuExpanded.value) {
+    promotionMenuExpanded.value = false
+    balanceMenuExpanded.value = false
+  }
+}
+
+function togglePromotionMenu() {
+  promotionMenuExpanded.value = !promotionMenuExpanded.value
+  if (promotionMenuExpanded.value) {
+    foodMenuExpanded.value = false
+    balanceMenuExpanded.value = false
+  }
 }
 
 function toggleBalanceMenu() {
   balanceMenuExpanded.value = !balanceMenuExpanded.value
-  if (balanceMenuExpanded.value) foodMenuExpanded.value = false
+  if (balanceMenuExpanded.value) {
+    foodMenuExpanded.value = false
+    promotionMenuExpanded.value = false
+  }
 }
 
 function openPrimaryPage(tab) {
   activeTab.value = tab
   foodMenuExpanded.value = false
+  promotionMenuExpanded.value = false
   balanceMenuExpanded.value = false
+}
+
+function openPromotionInvite() {
+  promotionMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+  activeTab.value = 'promotion'
+  loadPromotionData()
+}
+
+function openPromotionRecords() {
+  promotionMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+  activeTab.value = 'promotion-record'
+  loadPromotionData()
 }
 
 function openBalancePage() {
   balanceMenuExpanded.value = true
   foodMenuExpanded.value = false
+  promotionMenuExpanded.value = false
   activeTab.value = 'balance'
   loadUserRecords()
 }
@@ -1273,6 +1348,7 @@ function openBalancePage() {
 function openVoucherPage() {
   balanceMenuExpanded.value = true
   foodMenuExpanded.value = false
+  promotionMenuExpanded.value = false
   activeTab.value = 'voucher'
   voucherForm.voucherCode = ''
   refreshCurrentMember()
@@ -1487,6 +1563,7 @@ function showPaymentSuccess(payment = {}) {
     status: '已支付'
   })
   foodMenuExpanded.value = true
+  promotionMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'food-order'
 }

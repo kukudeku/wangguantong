@@ -1578,30 +1578,13 @@
   font-size: 10px;
 }
 
-.wt-promotion-record-head {
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.wt-promotion-record-head h3,
-.wt-promotion-record-head p,
 .wt-promotion-rule h3,
 .wt-promotion-rule p {
   margin: 0;
 }
 
-.wt-promotion-record-head h3,
 .wt-promotion-rule h3 {
   font-size: 15px;
-}
-
-.wt-promotion-record-head p {
-  margin-top: 4px;
-  color: var(--wt-muted);
-  font-size: 11px;
 }
 
 .wt-promotion-summary {
@@ -1694,6 +1677,19 @@
 
 .wt-record-surface {
   margin-top: 0;
+}
+
+.wt-record-summary.wt-promotion-record-summary {
+  margin-top: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wt-promotion-record-summary > div:nth-child(2) {
+  border-right: 0;
+}
+
+.wt-promotion-record-surface .wt-record-toolbar {
+  margin-top: 20px;
 }
 
 .wt-balance-hero {
