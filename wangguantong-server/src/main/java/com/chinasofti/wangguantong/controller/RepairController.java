@@ -27,17 +27,22 @@ public class RepairController {
 
     @GetMapping("/list")
     public Result<List<RepairRecord>> list(@RequestParam(required = false) String computerNo,
-                                           @RequestParam(required = false) String status) {
+                                           @RequestParam(required = false) String status,
+                                           @RequestParam(required = false) Long memberId,
+                                           @RequestParam(required = false) String serviceType) {
         return Result.success(repairRecordService.list(new LambdaQueryWrapper<RepairRecord>()
                 .like(StringUtils.hasText(computerNo), RepairRecord::getComputerNo, computerNo)
                 .eq(StringUtils.hasText(status), RepairRecord::getStatus, status)
+                .eq(memberId != null, RepairRecord::getMemberId, memberId)
+                .eq(StringUtils.hasText(serviceType), RepairRecord::getServiceType, serviceType)
                 .orderByDesc(RepairRecord::getId)));
     }
 
     @PostMapping("/report")
     public Result<Void> report(@RequestBody RepairRecord record) {
         try {
-            repairRecordService.report(record.getComputerId(), record.getMemberId(), record.getProblemDescription());
+            repairRecordService.report(record.getComputerId(), record.getMemberId(), record.getServiceType(),
+                    record.getServiceLocation(), record.getProblemDescription());
             return Result.success();
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());

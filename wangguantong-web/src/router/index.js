@@ -11,6 +11,7 @@ import User from '../views/user/index.vue'
 import UserLogin from '../views/user-login/index.vue'
 import Coupon from '../views/coupon/index.vue'
 import Promotion from '../views/promotion/index.vue'
+import Service from '../views/service/index.vue'
 
 const routes = [
   { path: '/', redirect: '/user' },
@@ -27,6 +28,7 @@ const routes = [
   { path: '/admin/food', component: Food },
   { path: '/admin/coupon', component: Coupon },
   { path: '/admin/promotion', component: Promotion },
+  { path: '/admin/service', component: Service },
   { path: '/admin/reservation', component: Reservation },
   { path: '/login', redirect: '/admin/login' },
   { path: '/dashboard', redirect: '/admin/dashboard' },
@@ -38,6 +40,7 @@ const routes = [
   { path: '/food', redirect: '/admin/food' },
   { path: '/coupon', redirect: '/admin/coupon' },
   { path: '/promotion', redirect: '/admin/promotion' },
+  { path: '/service', redirect: '/admin/service' },
   { path: '/reservation', redirect: '/admin/reservation' }
 ]
 

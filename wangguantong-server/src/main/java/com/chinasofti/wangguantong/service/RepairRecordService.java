@@ -5,7 +5,8 @@ import com.chinasofti.wangguantong.entity.RepairRecord;
 
 public interface RepairRecordService extends IService<RepairRecord> {
 
-    void report(Long computerId, Long memberId, String problemDescription);
+    void report(Long computerId, Long memberId, String serviceType, String serviceLocation,
+                String problemDescription);
 
     void process(Long recordId, String status, String processRemark);
 }

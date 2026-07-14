@@ -258,10 +258,12 @@ CREATE TABLE `online_record` (
 -- 机器报修记录表
 CREATE TABLE `repair_record` (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
-  computer_id BIGINT NOT NULL COMMENT '电脑ID',
-  computer_no VARCHAR(30) NOT NULL COMMENT '电脑编号',
+  computer_id BIGINT NULL COMMENT '电脑ID，呼叫网管时可为空',
+  computer_no VARCHAR(30) NULL COMMENT '电脑编号',
   member_id BIGINT NULL COMMENT '报修用户ID，管理员报修可为空',
   member_name VARCHAR(50) NULL COMMENT '报修人',
+  service_type VARCHAR(20) NOT NULL DEFAULT '故障报修' COMMENT '服务类型：呼叫网管 / 故障报修',
+  service_location VARCHAR(100) NULL COMMENT '用户所在位置',
   problem_description VARCHAR(500) NOT NULL COMMENT '故障说明',
   status VARCHAR(20) NOT NULL DEFAULT '待处理' COMMENT '状态：待处理 / 处理中 / 已完成 / 已取消',
   process_remark VARCHAR(500) NULL COMMENT '处理说明',

@@ -83,7 +83,12 @@
           <template #icon><IconDesktop /></template>
           <template #title>机位管理</template>
           <a-menu-item key="/admin/computer?tab=computer">电脑列表</a-menu-item>
-          <a-menu-item key="/admin/computer?tab=repair">报修管理</a-menu-item>
+        </a-sub-menu>
+
+        <a-sub-menu key="module-service">
+          <template #icon><IconCustomerService /></template>
+          <template #title>服务中心</template>
+          <a-menu-item key="/admin/service">服务工单</a-menu-item>
         </a-sub-menu>
 
         <a-sub-menu key="module-operation">
@@ -137,6 +142,7 @@ import {
   IconApps,
   IconCalendarClock,
   IconComputer,
+  IconCustomerService,
   IconDashboard,
   IconDesktop,
   IconDown,
@@ -159,7 +165,7 @@ const menuMeta = {
   '/admin/member': { module: '会员服务', group: 'module-member', title: '会员列表' },
   '/admin/recharge': { module: '会员服务', group: 'module-member', title: '余额充值' },
   '/admin/computer?tab=computer': { module: '机位管理', group: 'module-computer', title: '电脑列表' },
-  '/admin/computer?tab=repair': { module: '机位管理', group: 'module-computer', title: '报修管理' },
+  '/admin/service': { module: '服务中心', group: 'module-service', title: '服务工单' },
   '/admin/reservation': { module: '上机运营', group: 'module-operation', title: '预约管理' },
   '/admin/online': { module: '上机运营', group: 'module-operation', title: '上机管理' },
   '/admin/food?tab=order': { module: '点餐管理', group: 'module-food', title: '点餐订单' },

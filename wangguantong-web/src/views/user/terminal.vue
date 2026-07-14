@@ -10,10 +10,37 @@
       </div>
 
       <nav class="wt-nav" aria-label="用户端功能导航">
-        <button :class="{ active: activeTab === 'seat' }" @click="openPrimaryPage('seat')">
-          <IconDesktop />
-          <span>座位上机</span>
-        </button>
+        <div class="wt-nav-group" :class="{ expanded: onlineMenuExpanded }">
+          <button
+            type="button"
+            class="wt-nav-parent"
+            :class="{ 'child-active': isOnlineServicePage }"
+            :aria-expanded="onlineMenuExpanded"
+            @click="toggleOnlineMenu"
+          >
+            <IconDesktop />
+            <span>上机服务</span>
+            <span class="wt-nav-meta"><IconDown class="wt-nav-arrow" /></span>
+          </button>
+          <div v-show="onlineMenuExpanded" class="wt-subnav">
+            <button type="button" :class="{ active: activeTab === 'seat' }" :aria-current="activeTab === 'seat' ? 'page' : undefined" @click="openMachineHall">
+              <IconDesktop />
+              <span>机位大厅</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'current-online' }" :aria-current="activeTab === 'current-online' ? 'page' : undefined" @click="openCurrentOnline">
+              <IconLiveBroadcast />
+              <span>当前上机</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'reservation-list' }" :aria-current="activeTab === 'reservation-list' ? 'page' : undefined" @click="openMyReservations">
+              <IconCalendarClock />
+              <span>我的预约</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'online-history' }" :aria-current="activeTab === 'online-history' ? 'page' : undefined" @click="openOnlineHistory">
+              <IconHistory />
+              <span>上机记录</span>
+            </button>
+          </div>
+        </div>
         <div class="wt-nav-group" :class="{ expanded: foodMenuExpanded }">
           <button
             type="button"
@@ -40,10 +67,29 @@
             </button>
           </div>
         </div>
-        <button :class="{ active: activeTab === 'coupon' }" @click="openPrimaryPage('coupon')">
-          <IconGift />
-          <span>签到领券</span>
-        </button>
+        <div class="wt-nav-group" :class="{ expanded: activityMenuExpanded }">
+          <button
+            type="button"
+            class="wt-nav-parent"
+            :class="{ 'child-active': isActivityPage }"
+            :aria-expanded="activityMenuExpanded"
+            @click="toggleActivityMenu"
+          >
+            <IconGift />
+            <span>活动中心</span>
+            <span class="wt-nav-meta"><IconDown class="wt-nav-arrow" /></span>
+          </button>
+          <div v-show="activityMenuExpanded" class="wt-subnav">
+            <button type="button" :class="{ active: activeTab === 'coupon' }" :aria-current="activeTab === 'coupon' ? 'page' : undefined" @click="openDailySignIn">
+              <IconCheckCircleFill />
+              <span>每日签到</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'coupon-list' }" :aria-current="activeTab === 'coupon-list' ? 'page' : undefined" @click="openMyCoupons">
+              <IconGift />
+              <span>我的优惠券</span>
+            </button>
+          </div>
+        </div>
         <div class="wt-nav-group" :class="{ expanded: promotionMenuExpanded }">
           <button
             type="button"
@@ -64,6 +110,33 @@
             <button type="button" :class="{ active: activeTab === 'promotion-record' }" :aria-current="activeTab === 'promotion-record' ? 'page' : undefined" @click="openPromotionRecords">
               <IconHistory />
               <span>邀请记录</span>
+            </button>
+          </div>
+        </div>
+        <div class="wt-nav-group" :class="{ expanded: serviceMenuExpanded }">
+          <button
+            type="button"
+            class="wt-nav-parent"
+            :class="{ 'child-active': isServicePage }"
+            :aria-expanded="serviceMenuExpanded"
+            @click="toggleServiceMenu"
+          >
+            <IconCustomerService />
+            <span>服务中心</span>
+            <span class="wt-nav-meta"><IconDown class="wt-nav-arrow" /></span>
+          </button>
+          <div v-show="serviceMenuExpanded" class="wt-subnav">
+            <button type="button" :class="{ active: activeTab === 'service-call' }" :aria-current="activeTab === 'service-call' ? 'page' : undefined" @click="openServiceCall">
+              <IconCustomerService />
+              <span>呼叫网管</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'service-repair' }" :aria-current="activeTab === 'service-repair' ? 'page' : undefined" @click="openServiceRepair">
+              <IconTool />
+              <span>故障报修</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'service-record' }" :aria-current="activeTab === 'service-record' ? 'page' : undefined" @click="openServiceRecords">
+              <IconHistory />
+              <span>服务记录</span>
             </button>
           </div>
         </div>
@@ -136,7 +209,7 @@
       </header>
 
       <main class="wt-content">
-        <section v-if="activeTab === 'seat'" class="wt-account-band" aria-label="账户摘要">
+        <section v-if="isOnlineServicePage" class="wt-account-band" aria-label="账户摘要">
           <div class="wt-account-name">
             <div class="wt-avatar small">{{ currentMember?.name?.slice(0, 1) || '用' }}</div>
             <div>
@@ -168,10 +241,10 @@
           <div class="wt-surface wt-seat-surface">
             <div class="wt-section-head">
               <div>
-                <h2>{{ currentRunningRecord ? '当前上机电脑' : '电脑座位图' }}</h2>
-                <p>{{ currentRunningRecord ? '查看实时计费信息，结束使用后请自助下机。' : currentReservation ? '在紫色的本人预约机位点击“预约上机”。' : '绿色机位可直接上机或预约。' }}</p>
+                <h2>电脑座位图</h2>
+                <p>{{ currentReservation ? '紫色机位为本人预约，可前往“我的预约”操作。' : '绿色机位可直接上机或预约。' }}</p>
               </div>
-              <div v-if="!currentRunningRecord" class="wt-legend">
+              <div class="wt-legend">
                 <span><i class="free"></i>空闲</span>
                 <span><i class="using"></i>使用中</span>
                 <span><i class="reserved"></i>预约</span>
@@ -179,56 +252,7 @@
               </div>
             </div>
 
-            <div v-if="currentRunningRecord" class="wt-running">
-              <div class="wt-running-machine">
-                <div>
-                  <span>正在使用</span>
-                  <strong>{{ currentRunningRecord.computerNo }}</strong>
-                  <p>{{ activeComputer?.area || '当前机位' }} · {{ formatDateTime(currentRunningRecord.startTime) }}</p>
-                </div>
-                <div class="wt-running-state"><i></i>计费中</div>
-              </div>
-              <div class="wt-metric-strip">
-                <div>
-                  <span>上机时长</span>
-                  <strong>{{ runningDurationText }}</strong>
-                </div>
-                <div>
-                  <span>计费小时</span>
-                  <strong>{{ chargeHours }} 小时</strong>
-                </div>
-                <div>
-                  <span>当前消费</span>
-                  <strong>￥{{ estimatedCurrentAmount }}</strong>
-                </div>
-                <div>
-                  <span>账户余额</span>
-                  <strong>￥{{ money(currentMember?.balance) }}</strong>
-                </div>
-              </div>
-              <div v-if="!balanceEnough" class="wt-warning">
-                <IconExclamationCircleFill />
-                <div>
-                  <strong>余额不足</strong>
-                  <span>{{ balanceWarningText }}</span>
-                </div>
-              </div>
-              <div class="wt-running-actions">
-                <a-button @click="openChangeComputerModal">
-                  <template #icon><IconSwap /></template>
-                  换机
-                </a-button>
-                <a-button status="warning" @click="openRepairModal">
-                  <template #icon><IconTool /></template>
-                  机器报修
-                </a-button>
-                <a-popconfirm content="确认下机结算吗？" @ok="submitEndOnline">
-                  <a-button type="primary">下机结算</a-button>
-                </a-popconfirm>
-              </div>
-            </div>
-
-            <div v-else class="wt-area-list">
+            <div class="wt-area-list">
               <section v-for="area in areaGroups" :key="area.name" class="wt-area-section">
                 <div class="wt-area-head">
                   <div>
@@ -281,6 +305,97 @@
             </div>
           </div>
 
+          <aside class="wt-rail">
+            <div class="wt-rail-head">
+              <div>
+                <h2>机位概览</h2>
+                <p>当前电脑状态</p>
+              </div>
+            </div>
+            <div class="wt-status-list">
+              <div><i class="free"></i><span>空闲电脑</span><strong>{{ freeCount }}</strong></div>
+              <div><i class="using"></i><span>使用中</span><strong>{{ usingCount }}</strong></div>
+              <div><i class="reserved"></i><span>预约锁定</span><strong>{{ reservedCount }}</strong></div>
+              <div><i class="repair"></i><span>维修中</span><strong>{{ repairCount }}</strong></div>
+            </div>
+            <div class="wt-notice">
+              <IconInfoCircle />
+              <div>
+                <strong>使用提示</strong>
+                <p>上机按会员等级计费，余额不足时请前往前台充值。</p>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section v-if="activeTab === 'current-online'" class="wt-layout-grid" :class="{ 'single-column': !currentRunningRecord }">
+          <div class="wt-surface wt-seat-surface">
+            <div class="wt-section-head">
+              <div>
+                <h2>当前上机</h2>
+                <p>实时查看上机时长与消费金额</p>
+              </div>
+              <a-button @click="refreshRunningData">刷新</a-button>
+            </div>
+
+            <div v-if="currentRunningRecord" class="wt-running">
+              <div class="wt-running-machine">
+                <div>
+                  <span>正在使用</span>
+                  <strong>{{ currentRunningRecord.computerNo }}</strong>
+                  <p>{{ activeComputer?.area || '当前机位' }} · {{ formatDateTime(currentRunningRecord.startTime) }}</p>
+                </div>
+                <div class="wt-running-state"><i></i>计费中</div>
+              </div>
+              <div class="wt-metric-strip">
+                <div>
+                  <span>上机时长</span>
+                  <strong>{{ runningDurationText }}</strong>
+                </div>
+                <div>
+                  <span>计费小时</span>
+                  <strong>{{ chargeHours }} 小时</strong>
+                </div>
+                <div>
+                  <span>当前消费</span>
+                  <strong>￥{{ estimatedCurrentAmount }}</strong>
+                </div>
+                <div>
+                  <span>账户余额</span>
+                  <strong>￥{{ money(currentMember?.balance) }}</strong>
+                </div>
+              </div>
+              <div v-if="!balanceEnough" class="wt-warning">
+                <IconExclamationCircleFill />
+                <div>
+                  <strong>余额不足</strong>
+                  <span>{{ balanceWarningText }}</span>
+                </div>
+              </div>
+              <div class="wt-running-actions">
+                <a-button @click="openChangeComputerModal">
+                  <template #icon><IconSwap /></template>
+                  换机
+                </a-button>
+                <a-button status="warning" @click="openRepairModal">
+                  <template #icon><IconTool /></template>
+                  机器报修
+                </a-button>
+                <a-popconfirm content="确认下机结算吗？" @ok="submitEndOnline">
+                  <a-button type="primary">下机结算</a-button>
+                </a-popconfirm>
+              </div>
+            </div>
+
+            <div v-else class="wt-empty large wt-online-empty">
+              <div>
+                <IconLiveBroadcast />
+                <strong>当前未上机</strong>
+                <a-button type="primary" @click="openMachineHall">前往机位大厅</a-button>
+              </div>
+            </div>
+          </div>
+
           <aside v-if="currentRunningRecord" class="wt-rail wt-order-rail">
             <div class="wt-rail-head">
               <div>
@@ -313,28 +428,68 @@
               <a-button type="primary" :disabled="cartItems.length === 0" @click="openFoodProducts">去结算</a-button>
             </div>
           </aside>
+        </section>
 
-          <aside v-else class="wt-rail">
-            <div class="wt-rail-head">
-              <div>
-                <h2>机位概览</h2>
-                <p>当前电脑状态</p>
+        <section v-if="activeTab === 'reservation-list'" class="wt-surface wt-record-surface">
+          <div class="wt-record-toolbar">
+            <div>
+              <h2>我的预约</h2>
+              <p>查看预约状态并完成预约上机</p>
+            </div>
+            <a-button @click="loadUserRecords">刷新</a-button>
+          </div>
+          <a-table
+            class="no-wrap-table wt-record-table"
+            :columns="reservationColumns"
+            :data="reservations"
+            row-key="id"
+            :pagination="false"
+            :scroll="{ x: 900 }"
+          >
+            <template #reserveTime="{ record }">{{ formatDateTime(record.reserveTime) }}</template>
+            <template #createTime="{ record }">{{ formatDateTime(record.createTime) }}</template>
+            <template #status="{ record }"><a-tag :color="reservationStatusColor(record.status)">{{ record.status }}</a-tag></template>
+            <template #reservationActions="{ record }">
+              <div v-if="record.status === '已预约'" class="wt-table-actions">
+                <a-popconfirm :content="`确认使用预约的 ${record.computerNo} 上机吗？`" @ok="submitReservedOnline(record)">
+                  <a-button type="primary" size="small">预约上机</a-button>
+                </a-popconfirm>
+                <a-popconfirm content="确认取消该预约吗？" @ok="submitCancelReservation(record)">
+                  <a-button status="danger" size="small">取消预约</a-button>
+                </a-popconfirm>
               </div>
+              <span v-else>-</span>
+            </template>
+          </a-table>
+        </section>
+
+        <section v-if="activeTab === 'online-history'" class="wt-surface wt-record-surface">
+          <div class="wt-record-toolbar">
+            <div>
+              <h2>上机记录</h2>
+              <p>查看历史上机、换机与扣费记录</p>
             </div>
-            <div class="wt-status-list">
-              <div><i class="free"></i><span>空闲电脑</span><strong>{{ freeCount }}</strong></div>
-              <div><i class="using"></i><span>使用中</span><strong>{{ usingCount }}</strong></div>
-              <div><i class="reserved"></i><span>预约锁定</span><strong>{{ reservedCount }}</strong></div>
-              <div><i class="repair"></i><span>维修中</span><strong>{{ repairCount }}</strong></div>
-            </div>
-            <div class="wt-notice">
-              <IconInfoCircle />
-              <div>
-                <strong>使用提示</strong>
-                <p>上机按会员等级计费，余额不足时请前往前台充值。</p>
+            <a-button @click="loadUserRecords">刷新</a-button>
+          </div>
+          <a-table
+            class="no-wrap-table wt-record-table"
+            :columns="onlineColumns"
+            :data="onlineHistoryRecords"
+            row-key="id"
+            :pagination="false"
+            :scroll="{ x: 1230 }"
+          >
+            <template #computerHistory="{ record }">
+              <div v-if="hasChangedComputer(record)" class="wt-change-record">
+                <a-tag color="orange">已换机</a-tag>
+                <span>{{ formatComputerHistory(record.computerHistory) }}</span>
               </div>
-            </div>
-          </aside>
+              <span v-else>未换机</span>
+            </template>
+            <template #startTime="{ record }">{{ formatDateTime(record.startTime) }}</template>
+            <template #endTime="{ record }">{{ formatDateTime(record.endTime) }}</template>
+            <template #status="{ record }"><a-tag color="green">{{ record.status }}</a-tag></template>
+          </a-table>
         </section>
 
         <section v-if="activeTab === 'food'" class="wt-food-layout">
@@ -466,8 +621,7 @@
           </a-table>
         </section>
 
-        <section v-if="activeTab === 'coupon'" class="wt-coupon-layout">
-          <div class="wt-surface wt-sign-surface">
+        <section v-if="activeTab === 'coupon'" class="wt-surface wt-sign-surface">
             <div class="wt-section-head">
               <div>
                 <h2>每日签到</h2>
@@ -490,22 +644,25 @@
                 <small>{{ (signInInfo.consecutiveDays || 0) >= rule.consecutiveDays ? '已达成' : '未达成' }}</small>
               </article>
             </div>
-          </div>
+        </section>
 
-          <aside class="wt-rail wt-coupon-rail">
-            <div class="wt-rail-head">
-              <div><h2>我的优惠券</h2><p>{{ availableCouponCount }} 张可使用</p></div>
+        <section v-if="activeTab === 'coupon-list'" class="wt-surface wt-coupon-wallet-surface">
+          <div class="wt-section-head">
+            <div>
+              <h2>我的优惠券</h2>
+              <p>{{ availableCouponCount }} 张可使用</p>
             </div>
-            <div v-if="userCoupons.length === 0" class="wt-cart-empty">
-              <IconGift /><strong>暂无优惠券</strong><span>签到后可领取</span>
-            </div>
-            <div v-else class="wt-user-coupon-list">
-              <article v-for="coupon in userCoupons" :key="coupon.id" :class="coupon.status === '可使用' ? 'available' : 'disabled'">
-                <div><strong>￥{{ money(coupon.discountAmount) }}</strong><span>满 ￥{{ money(coupon.minSpend) }} 可用</span></div>
-                <div><b>{{ coupon.couponName }}</b><span>{{ coupon.status }} · {{ formatDateTime(coupon.expireTime) }} 到期</span></div>
-              </article>
-            </div>
-          </aside>
+            <a-button @click="loadCouponData">刷新</a-button>
+          </div>
+          <div v-if="userCoupons.length === 0" class="wt-empty large">
+            <div><IconGift /><strong>暂无优惠券</strong></div>
+          </div>
+          <div v-else class="wt-user-coupon-list wt-coupon-wallet-list">
+            <article v-for="coupon in userCoupons" :key="coupon.id" :class="coupon.status === '可使用' ? 'available' : 'disabled'">
+              <div><strong>￥{{ money(coupon.discountAmount) }}</strong><span>满 ￥{{ money(coupon.minSpend) }} 可用</span></div>
+              <div><b>{{ coupon.couponName }}</b><span>{{ coupon.status }} · {{ formatDateTime(coupon.expireTime) }} 到期</span></div>
+            </article>
+          </div>
         </section>
 
         <section v-if="activeTab === 'promotion'" class="wt-promotion-layout">
@@ -589,6 +746,146 @@
           </a-table>
         </section>
 
+        <section v-if="activeTab === 'service-call'" class="wt-service-layout">
+          <div class="wt-surface wt-service-form-surface">
+            <div class="wt-section-head">
+              <div>
+                <h2>呼叫网管</h2>
+                <p>提交服务需求，工作人员将在后台受理</p>
+              </div>
+            </div>
+            <a-form :model="serviceCallForm" layout="vertical" class="wt-service-form">
+              <a-form-item label="服务类型" required>
+                <a-select v-model="serviceCallForm.requestCategory" placeholder="请选择服务类型">
+                  <a-option value="设备协助">设备协助</a-option>
+                  <a-option value="网络协助">网络协助</a-option>
+                  <a-option value="商品配送">商品配送</a-option>
+                  <a-option value="账户咨询">账户咨询</a-option>
+                  <a-option value="其他服务">其他服务</a-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item label="所在位置" required>
+                <a-input v-model="serviceCallForm.location" :max-length="100" placeholder="例如 A001、电竞一区或前台" />
+              </a-form-item>
+              <a-form-item label="服务说明" required>
+                <a-textarea
+                  v-model="serviceCallForm.description"
+                  :max-length="500"
+                  :auto-size="{ minRows: 5, maxRows: 8 }"
+                  show-word-limit
+                  placeholder="请简要说明需要工作人员协助的事项"
+                />
+              </a-form-item>
+              <a-button type="primary" class="wt-service-submit" @click="submitServiceCall">
+                <template #icon><IconCustomerService /></template>
+                提交呼叫
+              </a-button>
+            </a-form>
+          </div>
+          <aside class="wt-rail wt-service-rail">
+            <div class="wt-rail-head">
+              <div>
+                <h2>服务状态</h2>
+                <p>个人工单概览</p>
+              </div>
+            </div>
+            <div class="wt-status-list">
+              <div><i class="reserved"></i><span>待处理</span><strong>{{ serviceStatusCount('待处理') }}</strong></div>
+              <div><i class="using"></i><span>处理中</span><strong>{{ serviceStatusCount('处理中') }}</strong></div>
+              <div><i class="free"></i><span>已完成</span><strong>{{ serviceStatusCount('已完成') }}</strong></div>
+            </div>
+            <a-button long @click="openServiceRecords">查看服务记录</a-button>
+          </aside>
+        </section>
+
+        <section v-if="activeTab === 'service-repair'" class="wt-service-layout">
+          <div class="wt-surface wt-service-form-surface">
+            <div class="wt-section-head">
+              <div>
+                <h2>故障报修</h2>
+                <p>选择故障电脑并描述问题</p>
+              </div>
+            </div>
+            <a-form :model="serviceRepairForm" layout="vertical" class="wt-service-form">
+              <a-form-item label="故障电脑" required>
+                <a-select v-model="serviceRepairForm.computerId" placeholder="请选择电脑" allow-search>
+                  <a-option v-for="computer in computers" :key="computer.id" :value="computer.id">
+                    {{ computer.computerNo }} · {{ computer.area }}
+                  </a-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item label="故障类型" required>
+                <a-select v-model="serviceRepairForm.faultCategory">
+                  <a-option value="电脑故障">电脑故障</a-option>
+                  <a-option value="网络故障">网络故障</a-option>
+                  <a-option value="外设故障">外设故障</a-option>
+                  <a-option value="软件故障">软件故障</a-option>
+                  <a-option value="其他故障">其他故障</a-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item label="故障说明" required>
+                <a-textarea
+                  v-model="serviceRepairForm.description"
+                  :max-length="500"
+                  :auto-size="{ minRows: 5, maxRows: 8 }"
+                  show-word-limit
+                  placeholder="请描述故障现象，便于工作人员提前准备"
+                />
+              </a-form-item>
+              <a-button type="primary" class="wt-service-submit" @click="submitServiceRepair">
+                <template #icon><IconTool /></template>
+                提交报修
+              </a-button>
+            </a-form>
+          </div>
+          <aside class="wt-rail wt-service-rail">
+            <div class="wt-rail-head">
+              <div>
+                <h2>当前机位</h2>
+                <p>报修电脑信息</p>
+              </div>
+            </div>
+            <div class="wt-service-machine">
+              <span>电脑编号</span>
+              <strong>{{ selectedServiceComputer?.computerNo || '未选择' }}</strong>
+              <p>{{ selectedServiceComputer?.area || '请选择需要报修的电脑' }}</p>
+            </div>
+            <a-button long @click="openServiceRecords">查看报修进度</a-button>
+          </aside>
+        </section>
+
+        <section v-if="activeTab === 'service-record'" class="wt-surface wt-record-surface">
+          <div class="wt-record-toolbar">
+            <div>
+              <h2>服务记录</h2>
+              <p>查看呼叫与报修的处理进度</p>
+            </div>
+            <a-button @click="loadServiceRecords">刷新</a-button>
+          </div>
+          <div class="wt-record-summary wt-service-summary">
+            <div><span>全部工单</span><strong>{{ serviceRecords.length }}</strong></div>
+            <div><span>待处理</span><strong>{{ serviceStatusCount('待处理') }}</strong></div>
+            <div><span>处理中</span><strong>{{ serviceStatusCount('处理中') }}</strong></div>
+            <div><span>已完成</span><strong>{{ serviceStatusCount('已完成') }}</strong></div>
+          </div>
+          <a-table
+            class="no-wrap-table wt-record-table"
+            :columns="serviceColumns"
+            :data="serviceRecords"
+            row-key="id"
+            :pagination="false"
+            :scroll="{ x: 1100 }"
+          >
+            <template #serviceType="{ record }">
+              <a-tag :color="record.serviceType === '呼叫网管' ? 'arcoblue' : 'orange'">{{ record.serviceType || '故障报修' }}</a-tag>
+            </template>
+            <template #serviceLocation="{ record }">{{ record.serviceLocation || record.computerNo || '-' }}</template>
+            <template #status="{ record }"><a-tag :color="serviceStatusColor(record.status)">{{ record.status }}</a-tag></template>
+            <template #createTime="{ record }">{{ formatDateTime(record.createTime) }}</template>
+            <template #finishTime="{ record }">{{ formatDateTime(record.finishTime) }}</template>
+          </a-table>
+        </section>
+
         <section v-if="activeTab === 'balance'" class="wt-surface wt-record-surface">
           <div class="wt-balance-hero">
             <div>
@@ -602,7 +899,7 @@
             </button>
           </div>
 
-          <div class="wt-record-summary">
+          <div class="wt-record-summary wt-balance-summary">
             <div>
               <span>余额变动</span>
               <strong>{{ balanceDetails.length }} 条</strong>
@@ -611,29 +908,16 @@
               <span>余额消费</span>
               <strong>￥{{ totalSpent }}</strong>
             </div>
-            <div>
-              <span>上机记录</span>
-              <strong>{{ onlineRecords.length }} 条</strong>
-            </div>
-            <div>
-              <span>点餐订单</span>
-              <strong>{{ orders.length }} 笔</strong>
-            </div>
           </div>
 
           <div class="wt-record-toolbar">
             <div>
-              <h2>账户明细</h2>
-              <p>查看充值、消费与历史记录</p>
-            </div>
-            <div class="wt-record-tabs">
-              <button :class="{ active: recordTab === 'balance' }" @click="recordTab = 'balance'">余额明细</button>
-              <button :class="{ active: recordTab === 'online' }" @click="recordTab = 'online'">上机记录</button>
+              <h2>余额明细</h2>
+              <p>查看充值与消费记录</p>
             </div>
           </div>
 
           <a-table
-            v-if="recordTab === 'balance'"
             class="no-wrap-table wt-record-table"
             :columns="balanceColumns"
             :data="balanceDetails"
@@ -647,29 +931,6 @@
               </span>
             </template>
             <template #createTime="{ record }">{{ formatDateTime(record.createTime) }}</template>
-          </a-table>
-
-          <a-table
-            v-if="recordTab === 'online'"
-            class="no-wrap-table wt-record-table"
-            :columns="onlineColumns"
-            :data="onlineRecords"
-            row-key="id"
-            :pagination="false"
-            :scroll="{ x: 1230 }"
-          >
-            <template #computerHistory="{ record }">
-              <div v-if="hasChangedComputer(record)" class="wt-change-record">
-                <a-tag color="orange">已换机</a-tag>
-                <span>{{ formatComputerHistory(record.computerHistory) }}</span>
-              </div>
-              <span v-else>未换机</span>
-            </template>
-            <template #startTime="{ record }">{{ formatDateTime(record.startTime) }}</template>
-            <template #endTime="{ record }">{{ formatDateTime(record.endTime) }}</template>
-            <template #status="{ record }">
-              <a-tag :color="record.status === '进行中' ? 'blue' : 'green'">{{ record.status }}</a-tag>
-            </template>
           </a-table>
 
         </section>
@@ -866,8 +1127,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import {
   IconApps,
+  IconCalendarClock,
   IconCheckCircleFill,
   IconCopy,
+  IconCustomerService,
   IconDesktop,
   IconDown,
   IconExclamationCircleFill,
@@ -875,6 +1138,7 @@ import {
   IconHistory,
   IconInfoCircle,
   IconList,
+  IconLiveBroadcast,
   IconMinus,
   IconPlus,
   IconPoweroff,
@@ -897,7 +1161,7 @@ import { getSignInStatus, getUserCoupons, userSignIn } from '../../api/coupon'
 import { getMemberList } from '../../api/member'
 import { changeOnlineComputer, endOnline, startOnline } from '../../api/online'
 import { addRecharge } from '../../api/recharge'
-import { reportRepair } from '../../api/repair'
+import { getRepairList, reportRepair } from '../../api/repair'
 import { getPromotionOverview } from '../../api/promotion'
 import { addReservation, cancelReservation, getReservationList, startReservation } from '../../api/reservation'
 import { changeUserPassword, getUserBalanceDetail, getUserOnlineRecords, getUserOrders } from '../../api/user'
@@ -907,9 +1171,11 @@ import { formatDateTime } from '../../utils/format'
 const route = useRoute()
 const router = useRouter()
 const activeTab = ref('seat')
-const recordTab = ref('balance')
+const onlineMenuExpanded = ref(true)
 const foodMenuExpanded = ref(false)
+const activityMenuExpanded = ref(false)
 const promotionMenuExpanded = ref(false)
+const serviceMenuExpanded = ref(false)
 const balanceMenuExpanded = ref(false)
 const selectedFoodCategory = ref('全部')
 const currentMember = ref(getStoredUser())
@@ -919,6 +1185,7 @@ const balanceDetails = ref([])
 const onlineRecords = ref([])
 const orders = ref([])
 const reservations = ref([])
+const serviceRecords = ref([])
 const userCoupons = ref([])
 const signInInfo = ref({ signedToday: false, consecutiveDays: 0, rules: [] })
 const promotionInfo = ref({
@@ -955,6 +1222,8 @@ const rechargeForm = reactive({ amount: 50 })
 const voucherForm = reactive({ voucherCode: '' })
 const changeComputerForm = reactive({ targetComputerId: null })
 const repairForm = reactive({ problemDescription: '' })
+const serviceCallForm = reactive({ requestCategory: '设备协助', location: '', description: '' })
+const serviceRepairForm = reactive({ computerId: null, faultCategory: '电脑故障', description: '' })
 const rechargeOptions = [20, 50, 100, 200]
 let timer = null
 let runningRefreshTimer = null
@@ -975,6 +1244,14 @@ const onlineColumns = [
   { title: '已扣金额', dataIndex: 'totalAmount', width: 120 },
   { title: '当前应扣', dataIndex: 'currentAmount', width: 120 },
   { title: '状态', slotName: 'status', width: 110 }
+]
+
+const reservationColumns = [
+  { title: '电脑编号', dataIndex: 'computerNo', width: 130 },
+  { title: '预约保留至', slotName: 'reserveTime', width: 200 },
+  { title: '状态', slotName: 'status', width: 110 },
+  { title: '创建时间', slotName: 'createTime', width: 200 },
+  { title: '操作', slotName: 'reservationActions', width: 240 }
 ]
 
 const orderColumns = [
@@ -998,6 +1275,17 @@ const promotionColumns = [
   { title: '邀请成功时间', slotName: 'createTime', width: 190 }
 ]
 
+const serviceColumns = [
+  { title: '服务类型', slotName: 'serviceType', width: 120 },
+  { title: '电脑编号', dataIndex: 'computerNo', width: 110 },
+  { title: '所在位置', slotName: 'serviceLocation', width: 140 },
+  { title: '服务内容', dataIndex: 'problemDescription', width: 300 },
+  { title: '状态', slotName: 'status', width: 100 },
+  { title: '处理说明', dataIndex: 'processRemark', width: 220 },
+  { title: '提交时间', slotName: 'createTime', width: 190 },
+  { title: '结束时间', slotName: 'finishTime', width: 190 }
+]
+
 function getStoredUser() {
   const text = localStorage.getItem('user')
   return text ? JSON.parse(text) : null
@@ -1011,39 +1299,59 @@ const discountText = computed(() => {
   return '无折扣'
 })
 
+const isOnlineServicePage = computed(() => ['seat', 'current-online', 'reservation-list', 'online-history'].includes(activeTab.value))
 const isFoodPage = computed(() => activeTab.value === 'food' || activeTab.value === 'food-order')
+const isActivityPage = computed(() => activeTab.value === 'coupon' || activeTab.value === 'coupon-list')
 const isPromotionPage = computed(() => activeTab.value === 'promotion' || activeTab.value === 'promotion-record')
+const isServicePage = computed(() => ['service-call', 'service-repair', 'service-record'].includes(activeTab.value))
 const isBalancePage = computed(() => activeTab.value === 'balance' || activeTab.value === 'voucher')
 
 const pageTitle = computed(() => {
+  if (activeTab.value === 'seat') return '机位大厅'
+  if (activeTab.value === 'current-online') return '当前上机'
+  if (activeTab.value === 'reservation-list') return '我的预约'
+  if (activeTab.value === 'online-history') return '上机记录'
   if (activeTab.value === 'food') return '自助点餐'
   if (activeTab.value === 'food-order') return '订单记录'
-  if (activeTab.value === 'coupon') return '签到领券'
+  if (activeTab.value === 'coupon') return '每日签到'
+  if (activeTab.value === 'coupon-list') return '我的优惠券'
   if (activeTab.value === 'promotion') return '邀请好友'
   if (activeTab.value === 'promotion-record') return '邀请记录'
+  if (activeTab.value === 'service-call') return '呼叫网管'
+  if (activeTab.value === 'service-repair') return '故障报修'
+  if (activeTab.value === 'service-record') return '服务记录'
   if (activeTab.value === 'balance') return '余额账户'
   if (activeTab.value === 'voucher') return '团购验券'
   return '座位与上机'
 })
 
 const pageSubtitle = computed(() => {
+  if (activeTab.value === 'seat') return '查看电脑状态并选择空闲机位'
+  if (activeTab.value === 'current-online') return '查看实时计费信息并进行换机或下机'
+  if (activeTab.value === 'reservation-list') return '管理预约并在保留时间内上机'
+  if (activeTab.value === 'online-history') return '查看历史上机、换机与扣费记录'
   if (activeTab.value === 'food') return '选择商品，确认清单后下单'
   if (activeTab.value === 'food-order') return '查看点餐订单、支付状态和处理进度'
   if (activeTab.value === 'coupon') return '每日签到，连续天数越多奖励越高'
+  if (activeTab.value === 'coupon-list') return '查看可用优惠券和使用期限'
   if (activeTab.value === 'promotion') return '邀请好友注册，双方领取余额奖励'
   if (activeTab.value === 'promotion-record') return '查看邀请成功记录和奖励明细'
+  if (activeTab.value === 'service-call') return '提交服务需求，工作人员将及时处理'
+  if (activeTab.value === 'service-repair') return '提交电脑故障并查看处理进度'
+  if (activeTab.value === 'service-record') return '查看全部服务工单和处理结果'
   if (activeTab.value === 'balance') return '充值余额并查看账户明细'
   if (activeTab.value === 'voucher') return '核销有效团购券，金额自动充入余额'
-  if (currentRunningRecord.value) return '当前已有电脑正在使用，可在本页自助下机'
-  return '选择空闲电脑，自助上机或预约'
+  return ''
 })
 
 const currentRunningRecord = computed(() => onlineRecords.value.find((item) => item.status === '进行中'))
+const onlineHistoryRecords = computed(() => onlineRecords.value.filter((item) => item.status !== '进行中'))
 const currentReservation = computed(() => reservations.value.find((item) => item.status === '已预约'))
 const ownReservationMap = computed(() => new Map(reservations.value
   .filter((item) => item.status === '已预约')
   .map((item) => [item.computerId, item])))
 const activeComputer = computed(() => computers.value.find((item) => item.id === currentRunningRecord.value?.computerId))
+const selectedServiceComputer = computed(() => computers.value.find((item) => item.id === serviceRepairForm.computerId))
 const freeComputers = computed(() => computers.value.filter((item) => item.status === '空闲'))
 const selectedChangeComputer = computed(() => computers.value.find((item) => item.id === changeComputerForm.targetComputerId))
 const selectedChangeFeeText = computed(() => {
@@ -1210,6 +1518,23 @@ function paymentStatusColor(status) {
   return 'blue'
 }
 
+function reservationStatusColor(status) {
+  if (status === '已预约') return 'purple'
+  if (status === '已上机') return 'green'
+  return 'gray'
+}
+
+function serviceStatusColor(status) {
+  if (status === '待处理') return 'orange'
+  if (status === '处理中') return 'blue'
+  if (status === '已完成') return 'green'
+  return 'gray'
+}
+
+function serviceStatusCount(status) {
+  return serviceRecords.value.filter((item) => item.status === status).length
+}
+
 async function loadData() {
   computers.value = await getComputerList({})
   foodItems.value = await getAvailableFoodItems()
@@ -1224,6 +1549,12 @@ async function loadUserRecords() {
   balanceDetails.value = await getUserBalanceDetail(currentMember.value.id)
   orders.value = await getUserOrders(currentMember.value.id)
   reservations.value = await getReservationList({ memberId: currentMember.value.id })
+  await loadServiceRecords()
+}
+
+async function loadServiceRecords() {
+  if (!currentMember.value?.id) return
+  serviceRecords.value = await getRepairList({ memberId: currentMember.value.id })
 }
 
 async function loadCouponData() {
@@ -1275,16 +1606,76 @@ function logout() {
   router.push('/user/login')
 }
 
-function openFoodProducts() {
-  foodMenuExpanded.value = true
+function toggleOnlineMenu() {
+  onlineMenuExpanded.value = !onlineMenuExpanded.value
+  if (onlineMenuExpanded.value) {
+    foodMenuExpanded.value = false
+    activityMenuExpanded.value = false
+    promotionMenuExpanded.value = false
+    serviceMenuExpanded.value = false
+    balanceMenuExpanded.value = false
+  }
+}
+
+function openMachineHall() {
+  onlineMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
   promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+  activeTab.value = 'seat'
+}
+
+function openCurrentOnline() {
+  onlineMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+  activeTab.value = 'current-online'
+  refreshRunningData()
+}
+
+function openMyReservations() {
+  onlineMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+  activeTab.value = 'reservation-list'
+  loadUserRecords()
+}
+
+function openOnlineHistory() {
+  onlineMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+  activeTab.value = 'online-history'
+  loadUserRecords()
+}
+
+function openFoodProducts() {
+  onlineMenuExpanded.value = false
+  foodMenuExpanded.value = true
+  activityMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'food'
 }
 
 function openFoodOrders() {
+  onlineMenuExpanded.value = false
   foodMenuExpanded.value = true
+  activityMenuExpanded.value = false
   promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'food-order'
   loadUserRecords()
@@ -1293,7 +1684,21 @@ function openFoodOrders() {
 function toggleFoodMenu() {
   foodMenuExpanded.value = !foodMenuExpanded.value
   if (foodMenuExpanded.value) {
+    onlineMenuExpanded.value = false
+    activityMenuExpanded.value = false
     promotionMenuExpanded.value = false
+    serviceMenuExpanded.value = false
+    balanceMenuExpanded.value = false
+  }
+}
+
+function toggleActivityMenu() {
+  activityMenuExpanded.value = !activityMenuExpanded.value
+  if (activityMenuExpanded.value) {
+    onlineMenuExpanded.value = false
+    foodMenuExpanded.value = false
+    promotionMenuExpanded.value = false
+    serviceMenuExpanded.value = false
     balanceMenuExpanded.value = false
   }
 }
@@ -1301,7 +1706,21 @@ function toggleFoodMenu() {
 function togglePromotionMenu() {
   promotionMenuExpanded.value = !promotionMenuExpanded.value
   if (promotionMenuExpanded.value) {
+    onlineMenuExpanded.value = false
     foodMenuExpanded.value = false
+    activityMenuExpanded.value = false
+    serviceMenuExpanded.value = false
+    balanceMenuExpanded.value = false
+  }
+}
+
+function toggleServiceMenu() {
+  serviceMenuExpanded.value = !serviceMenuExpanded.value
+  if (serviceMenuExpanded.value) {
+    onlineMenuExpanded.value = false
+    foodMenuExpanded.value = false
+    activityMenuExpanded.value = false
+    promotionMenuExpanded.value = false
     balanceMenuExpanded.value = false
   }
 }
@@ -1309,49 +1728,164 @@ function togglePromotionMenu() {
 function toggleBalanceMenu() {
   balanceMenuExpanded.value = !balanceMenuExpanded.value
   if (balanceMenuExpanded.value) {
+    onlineMenuExpanded.value = false
     foodMenuExpanded.value = false
+    activityMenuExpanded.value = false
     promotionMenuExpanded.value = false
+    serviceMenuExpanded.value = false
   }
 }
 
-function openPrimaryPage(tab) {
-  activeTab.value = tab
+function openDailySignIn() {
+  onlineMenuExpanded.value = false
+  activityMenuExpanded.value = true
   foodMenuExpanded.value = false
   promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
   balanceMenuExpanded.value = false
+  activeTab.value = 'coupon'
+  loadCouponData()
+}
+
+function openMyCoupons() {
+  onlineMenuExpanded.value = false
+  activityMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+  activeTab.value = 'coupon-list'
+  loadCouponData()
 }
 
 function openPromotionInvite() {
+  onlineMenuExpanded.value = false
   promotionMenuExpanded.value = true
   foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  serviceMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'promotion'
   loadPromotionData()
 }
 
 function openPromotionRecords() {
+  onlineMenuExpanded.value = false
   promotionMenuExpanded.value = true
   foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  serviceMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'promotion-record'
   loadPromotionData()
 }
 
 function openBalancePage() {
+  onlineMenuExpanded.value = false
   balanceMenuExpanded.value = true
   foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
   promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
   activeTab.value = 'balance'
   loadUserRecords()
 }
 
 function openVoucherPage() {
+  onlineMenuExpanded.value = false
   balanceMenuExpanded.value = true
   foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
   promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = false
   activeTab.value = 'voucher'
   voucherForm.voucherCode = ''
   refreshCurrentMember()
+}
+
+function openServiceCall() {
+  onlineMenuExpanded.value = false
+  foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = true
+  balanceMenuExpanded.value = false
+  activeTab.value = 'service-call'
+  if (!serviceCallForm.location && currentRunningRecord.value) {
+    serviceCallForm.location = `${currentRunningRecord.value.computerNo} 机位`
+  }
+  loadServiceRecords()
+}
+
+function openServiceRepair() {
+  onlineMenuExpanded.value = false
+  foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = true
+  balanceMenuExpanded.value = false
+  activeTab.value = 'service-repair'
+  if (!serviceRepairForm.computerId && currentRunningRecord.value) {
+    serviceRepairForm.computerId = currentRunningRecord.value.computerId
+  }
+  loadServiceRecords()
+}
+
+function openServiceRecords() {
+  onlineMenuExpanded.value = false
+  foodMenuExpanded.value = false
+  activityMenuExpanded.value = false
+  promotionMenuExpanded.value = false
+  serviceMenuExpanded.value = true
+  balanceMenuExpanded.value = false
+  activeTab.value = 'service-record'
+  loadServiceRecords()
+}
+
+async function submitServiceCall() {
+  if (!checkUserCanOperate()) return
+  if (!serviceCallForm.location.trim()) {
+    Message.error('请填写所在位置')
+    return
+  }
+  if (!serviceCallForm.description.trim()) {
+    Message.error('请填写服务说明')
+    return
+  }
+  await reportRepair({
+    computerId: currentRunningRecord.value?.computerId || null,
+    memberId: currentMember.value.id,
+    serviceType: '呼叫网管',
+    serviceLocation: serviceCallForm.location,
+    problemDescription: `[${serviceCallForm.requestCategory}] ${serviceCallForm.description.trim()}`
+  })
+  Message.success('呼叫已提交，请留意处理状态')
+  serviceCallForm.description = ''
+  await loadServiceRecords()
+  openServiceRecords()
+}
+
+async function submitServiceRepair() {
+  if (!checkUserCanOperate()) return
+  if (!serviceRepairForm.computerId) {
+    Message.error('请选择故障电脑')
+    return
+  }
+  if (!serviceRepairForm.description.trim()) {
+    Message.error('请填写故障说明')
+    return
+  }
+  await reportRepair({
+    computerId: serviceRepairForm.computerId,
+    memberId: currentMember.value.id,
+    serviceType: '故障报修',
+    serviceLocation: selectedServiceComputer.value?.computerNo || '',
+    problemDescription: `[${serviceRepairForm.faultCategory}] ${serviceRepairForm.description.trim()}`
+  })
+  Message.success('报修已提交，请留意处理状态')
+  serviceRepairForm.description = ''
+  await loadServiceRecords()
+  openServiceRecords()
 }
 
 function openPasswordModal() {
@@ -1562,7 +2096,9 @@ function showPaymentSuccess(payment = {}) {
     amount: payment.amount ?? paymentDialog.amount,
     status: '已支付'
   })
+  onlineMenuExpanded.value = false
   foodMenuExpanded.value = true
+  activityMenuExpanded.value = false
   promotionMenuExpanded.value = false
   balanceMenuExpanded.value = false
   activeTab.value = 'food-order'
@@ -1662,6 +2198,7 @@ async function submitOnline(computer) {
   Message.success('上机成功')
   await refreshCurrentMember()
   await loadData()
+  openCurrentOnline()
 }
 
 async function submitReservedOnline(reservation) {
@@ -1677,6 +2214,7 @@ async function submitReservedOnline(reservation) {
   } finally {
     await loadData()
   }
+  if (currentRunningRecord.value) openCurrentOnline()
 }
 
 async function submitCancelReservation(reservation) {
@@ -1698,6 +2236,7 @@ async function submitEndOnline() {
   Message.success('下机成功')
   await refreshCurrentMember()
   await loadData()
+  openMachineHall()
 }
 
 function openChangeComputerModal() {
@@ -1748,6 +2287,7 @@ async function submitRepair() {
     problemDescription: repairForm.problemDescription
   })
   Message.success('报修已提交，管理员会尽快处理')
+  await loadServiceRecords()
   return true
 }
 
@@ -1766,6 +2306,7 @@ async function submitReservation() {
   reservationVisible.value = false
   selectedComputer.value = null
   await loadData()
+  openMyReservations()
 }
 
 function validateReservationTime(value) {
@@ -1803,14 +2344,19 @@ function checkUserCanOperate() {
   return true
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!currentMember.value) {
     router.push('/user/login')
     return
   }
-  loadData()
-  refreshCurrentMember()
-  handleAlipayReturn()
+  await loadData()
+  await refreshCurrentMember()
+  if (currentRunningRecord.value) {
+    activeTab.value = 'current-online'
+  } else if (currentReservation.value) {
+    activeTab.value = 'reservation-list'
+  }
+  await handleAlipayReturn()
   timer = window.setInterval(() => {
     now.value = new Date()
   }, 1000)

@@ -92,8 +92,12 @@
 
 .wt-nav {
   margin-top: 34px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
   display: grid;
   gap: 6px;
+  scrollbar-width: thin;
 }
 
 .wt-nav button,
@@ -544,8 +548,8 @@
 
 .wt-layout-grid,
 .wt-food-layout,
-.wt-coupon-layout,
-.wt-promotion-layout {
+.wt-promotion-layout,
+.wt-service-layout {
   margin-top: 18px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 286px;
@@ -553,16 +557,87 @@
   align-items: start;
 }
 
+.wt-layout-grid.single-column {
+  grid-template-columns: 1fr;
+}
+
 .wt-food-layout {
   grid-template-columns: minmax(0, 1fr) 320px;
 }
 
-.wt-coupon-layout {
-  grid-template-columns: minmax(0, 1fr) 360px;
-}
-
 .wt-promotion-layout {
   grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.wt-service-layout {
+  grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.wt-service-form-surface {
+  min-height: 520px;
+}
+
+.wt-service-form {
+  max-width: 620px;
+  padding-top: 22px;
+}
+
+.wt-service-form :deep(.arco-form-item-label-col) {
+  font-weight: 650;
+}
+
+.wt-service-form :deep(.arco-input-wrapper),
+.wt-service-form :deep(.arco-select-view),
+.wt-service-form :deep(.arco-textarea-wrapper) {
+  border-color: #bcc7d8;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(188, 199, 216, 0.12);
+}
+
+.wt-service-form :deep(.arco-input-wrapper:hover),
+.wt-service-form :deep(.arco-select-view:hover),
+.wt-service-form :deep(.arco-textarea-wrapper:hover) {
+  border-color: #7f9edb;
+}
+
+.wt-service-submit {
+  min-width: 132px;
+  white-space: nowrap;
+}
+
+.wt-service-rail :deep(.arco-btn) {
+  margin-top: 14px;
+  white-space: nowrap;
+}
+
+.wt-service-machine {
+  min-height: 190px;
+  padding: 32px 16px;
+  border-bottom: 1px solid var(--wt-border);
+  text-align: center;
+}
+
+.wt-service-machine span,
+.wt-service-machine strong,
+.wt-service-machine p {
+  display: block;
+}
+
+.wt-service-machine span,
+.wt-service-machine p {
+  color: var(--wt-muted);
+  font-size: 12px;
+}
+
+.wt-service-machine strong {
+  margin: 12px 0 8px;
+  color: #1d2738;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.wt-service-summary {
+  margin-bottom: 16px;
 }
 
 .wt-surface,
@@ -1491,6 +1566,29 @@
   font-size: 10px;
 }
 
+.wt-coupon-wallet-surface {
+  margin-top: 0;
+}
+
+.wt-coupon-wallet-list {
+  padding-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.wt-coupon-wallet-surface .wt-empty svg {
+  display: block;
+  margin: 0 auto 12px;
+  color: var(--wt-subtle);
+  font-size: 34px;
+}
+
+.wt-coupon-wallet-surface .wt-empty strong {
+  display: block;
+  color: var(--wt-muted);
+  font-size: 14px;
+}
+
 .wt-invite-code-panel {
   min-height: 150px;
   margin-top: 20px;
@@ -1675,13 +1773,46 @@
   place-items: center;
 }
 
+.wt-online-empty svg {
+  display: block;
+  margin: 0 auto 12px;
+  color: var(--wt-subtle);
+  font-size: 36px;
+}
+
+.wt-online-empty strong {
+  display: block;
+  margin-bottom: 18px;
+  font-size: 15px;
+}
+
+.wt-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .wt-record-surface {
   margin-top: 0;
+}
+
+.wt-account-band + .wt-record-surface {
+  margin-top: 18px;
 }
 
 .wt-record-summary.wt-promotion-record-summary {
   margin-top: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wt-record-summary.wt-balance-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wt-balance-summary > div:nth-child(2) {
+  border-right: 0;
 }
 
 .wt-promotion-record-summary > div:nth-child(2) {
@@ -2221,8 +2352,10 @@
 
   .wt-nav {
     margin-top: 0;
+    overflow: visible;
+    padding-right: 0;
     display: grid;
-    grid-template-columns: repeat(5, minmax(90px, 1fr));
+    grid-template-columns: repeat(6, minmax(86px, 1fr));
   }
 
   .wt-nav button {
@@ -2284,8 +2417,8 @@
 @media (max-width: 880px) {
   .wt-layout-grid,
   .wt-food-layout,
-  .wt-coupon-layout,
-  .wt-promotion-layout {
+  .wt-promotion-layout,
+  .wt-service-layout {
     grid-template-columns: 1fr;
   }
 
@@ -2295,6 +2428,10 @@
 
   .wt-food-layout .wt-rail {
     order: -1;
+  }
+
+  .wt-service-form-surface {
+    min-height: 0;
   }
 
   .wt-cart-empty {
@@ -2316,6 +2453,21 @@
   .wt-nav {
     grid-column: 1 / -1;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .wt-nav-group {
+    align-self: start;
+  }
+
+  .wt-subnav {
+    position: static;
+    margin: 2px 0 4px;
+    padding: 5px;
+    border: 1px solid var(--wt-border);
+    border-radius: 6px;
+    background: #f8fafc;
+    box-shadow: none;
   }
 
   .wt-nav button {
@@ -2434,6 +2586,10 @@
   .wt-record-summary > div:nth-child(-n + 2) {
     border-bottom: 1px solid var(--wt-border);
   }
+
+  .wt-balance-summary > div:nth-child(-n + 2) {
+    border-bottom: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -2545,5 +2701,9 @@
 
   .wt-voucher-form :deep(.arco-btn) {
     width: 100%;
+  }
+
+  .wt-coupon-wallet-list {
+    grid-template-columns: 1fr;
   }
 }

@@ -15,6 +15,8 @@ public class RepairRecord {
     private String computerNo;
     private Long memberId;
     private String memberName;
+    private String serviceType;
+    private String serviceLocation;
     private String problemDescription;
     private String status;
     private String processRemark;
@@ -60,6 +62,22 @@ public class RepairRecord {
 
     public void setMemberName(String memberName) {
         this.memberName = memberName;
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+    }
+
+    public String getServiceLocation() {
+        return serviceLocation;
+    }
+
+    public void setServiceLocation(String serviceLocation) {
+        this.serviceLocation = serviceLocation;
     }
 
     public String getProblemDescription() {
