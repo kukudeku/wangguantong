@@ -1,98 +1,40 @@
 # 网管通宝塔部署文档
 
-本文档适合把“网管通 —— 电竞网吧运营管理系统”部署到一台安装了宝塔面板的 Linux 服务器。
+本文适用于当前网管通主系统：Vue 静态站点由 Nginx 提供，Spring Boot JAR 监听 `8087`，MySQL 数据库名为 `wangguantong`。
 
-## 一、部署前准备
-
-服务器建议：
-
-- CentOS、Ubuntu、Debian 均可
-- 内存建议 2GB 以上
-- 已安装宝塔面板
+## 1. 部署准备
 
 宝塔软件商店安装：
 
-- Nginx
-- MySQL 8.0 或 MySQL 5.7
-- Java 项目管理器
-- Java 17
+- Nginx；
+- MySQL 8（推荐）；
+- Java 项目管理器；
+- Java 17。
 
-本项目目录：
+服务器建议至少 2 GB 内存。真实支付环境还需要已备案或可用的 HTTPS 域名、商户资料和独立密钥目录。
 
-```text
-wangguantong
-├── database
-│   ├── wangguantong.sql
-│   └── update_20260708_features.sql
-│   └── update_20260708_user_login.sql
-│   └── update_20260714_food_payment.sql
-│   └── update_20260714_promotion.sql
-├── wangguantong-server
-└── wangguantong-web
-```
+## 2. 创建数据库
 
-## 二、创建 MySQL 数据库
-
-1. 登录宝塔面板。
-2. 打开“数据库”。
-3. 点击“添加数据库”。
-4. 填写：
+在宝塔创建数据库：
 
 ```text
 数据库名：wangguantong
 用户名：wangguantong
-密码：自己设置一个密码
 访问权限：本地服务器
 ```
 
-5. 创建完成后，进入 phpMyAdmin 或宝塔数据库管理工具。
-6. 执行 SQL 文件：
+全新安装导入 `database/wangguantong.sql`。该脚本会重建数据库，不能用于保留生产数据的升级。
 
-```text
-/Users/zhaoyuhan/wangguantong/database/wangguantong.sql
-```
+已有数据库先备份，再按 [增量升级表](local-and-baota.md#已有数据库升级) 执行缺失脚本。当前完整系统需要包含 18 张表；最后一项服务中心升级 `update_20260714_service_center.sql` 只执行一次。
 
-如果是本地打包后上传服务器，可以先在本地打开这个文件，复制全部 SQL 到宝塔数据库工具中执行。
+## 3. 配置并打包后端
 
-如果服务器上已经有旧版数据库，不想清空旧数据，可以只执行：
-
-```text
-database/update_20260708_features.sql
-```
-
-如果旧库只缺少用户端账号密码字段，可以执行：
-
-```text
-database/update_20260708_user_login.sql
-```
-
-如果旧库需要升级真实微信/支付宝支付，还要执行：
-
-```text
-database/update_20260714_food_payment.sql
-```
-
-如果旧库需要使用邀请码推广计划，还要执行：
-
-```text
-database/update_20260714_promotion.sql
-```
-
-升级顺序是先执行数据库脚本，再重启新版后端。该脚本会为已有会员生成 `WG000001` 格式的唯一邀请码，不会清空会员、余额或订单数据。
-
-新部署建议直接执行完整的 `wangguantong.sql`。
-
-## 三、修改后端数据库配置
-
-打开后端配置文件：
-
-```text
-wangguantong-server/src/main/resources/application.yml
-```
-
-修改数据库用户名和密码：
+修改 `wangguantong-server/src/main/resources/application.yml` 中的数据库配置，端口保持 `8087`：
 
 ```yaml
+server:
+  port: 8087
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -101,137 +43,67 @@ spring:
     password: 你的数据库密码
 ```
 
-端口保持：
-
-```yaml
-server:
-  port: 8087
-```
-
-## 四、打包后端 Spring Boot
-
-在本地或服务器进入后端目录：
+打包：
 
 ```bash
 cd wangguantong-server
 mvn clean package -DskipTests
 ```
 
-打包成功后会生成：
+上传：
 
 ```text
-wangguantong-server/target/wangguantong-server-1.0.0.jar
+target/wangguantong-server-1.0.0.jar
+→ /www/wwwroot/wangguantong/server/wangguantong-server-1.0.0.jar
 ```
 
-把这个 jar 上传到服务器，例如：
+不要上传 `.jar.original`。
 
-```text
-/www/wwwroot/wangguantong/server/wangguantong-server-1.0.0.jar
-```
-
-## 五、宝塔启动后端
-
-1. 打开宝塔“Java 项目管理器”。
-2. 点击“添加 Java 项目”。
-3. 填写：
+## 4. 创建宝塔 Java 项目
 
 ```text
 项目名称：wangguantong-server
 项目类型：Spring Boot
-项目 jar：/www/wwwroot/wangguantong/server/wangguantong-server-1.0.0.jar
+项目 JAR：/www/wwwroot/wangguantong/server/wangguantong-server-1.0.0.jar
 运行端口：8087
-JDK版本：Java 17
+JDK：Java 17
 ```
 
-4. 启动项目。
-5. 查看日志，确认没有数据库连接错误。
-
-可以在服务器终端测试：
+启动后验证：
 
 ```bash
 curl http://127.0.0.1:8087/dashboard/statistics
 ```
 
-如果返回 JSON，说明后端启动成功。
+返回 `code: 200` 的 JSON 说明后端、数据库和定时任务已正常启动。
 
-## 六、打包前端 Vue
+## 5. 构建前端
 
-前端生产环境建议通过 Nginx 代理 `/api` 到后端 `8087`，这样浏览器只访问同一个域名，不需要暴露后端端口。
-
-注意：本地开发不要创建 `.env.production` 来启动 `npm run dev`，本地默认通过 Vite 的 `/api` 代理请求 `8087`。宝塔部署才需要 `.env.production`。
-
-进入前端目录：
-
-```bash
-cd wangguantong-web
-npm install
-```
-
-创建生产环境配置：
-
-```text
-wangguantong-web/.env.production
-```
-
-内容写：
+构建前创建 `wangguantong-web/.env.production`：
 
 ```env
 VITE_API_BASE_URL=/api
 ```
 
-项目里也提供了两个示例文件：
-
-```text
-wangguantong-web/.env.development.example
-wangguantong-web/.env.production.example
-```
-
-本地开发可以不用创建 `.env.development`，因为代码默认使用 `/api`，Vite 会转发到 `http://localhost:8087`。
-
-然后打包：
+执行：
 
 ```bash
+cd wangguantong-web
+npm install
 npm run build
 ```
 
-打包结果：
-
-```text
-wangguantong-web/dist
-```
-
-把 `dist` 目录里的所有文件上传到：
+将 `dist` 中的内容上传到：
 
 ```text
 /www/wwwroot/wangguantong/web
 ```
 
-注意：上传的是 `dist` 目录里面的文件，不是把 `dist` 文件夹本身放进去也可以，但网站根目录要指到实际包含 `index.html` 的目录。
+站点根目录必须直接包含 `index.html` 和 `assets/`。
 
-## 七、宝塔创建前端网站
+## 6. 创建静态站点与 Nginx 代理
 
-1. 打开宝塔“网站”。
-2. 点击“添加站点”。
-3. 填写：
-
-```text
-域名：你的域名 或 服务器IP
-根目录：/www/wwwroot/wangguantong/web
-PHP版本：纯静态
-```
-
-4. 保存。
-
-如果没有域名，可以先用服务器 IP 访问。
-
-## 八、配置 Nginx 反向代理后端
-
-进入宝塔网站设置：
-
-1. 找到刚创建的网站。
-2. 点击“设置”。
-3. 点击“配置文件”。
-4. 在 `server { ... }` 中加入以下配置：
+宝塔网站根目录设置为 `/www/wwwroot/wangguantong/web`，PHP 选择纯静态。站点配置加入：
 
 ```nginx
 location /api/ {
@@ -247,157 +119,43 @@ location / {
 }
 ```
 
-保存后重载 Nginx。
+保存并重载 Nginx。`proxy_pass` 末尾的 `/` 会把 `/api/admin/login` 正确转为后端 `/admin/login`。
 
-这样前端请求 `/api/admin/login` 时，会被 Nginx 转发到：
+外网只需开放 `80` 和 `443`；`8087` 建议只允许本机访问。
 
-```text
-http://127.0.0.1:8087/admin/login
-```
+## 7. HTTPS 与真实支付
 
-## 九、放行端口
+余额支付无需额外配置。微信和支付宝默认关闭。启用真实支付时：
 
-如果使用 Nginx 代理，外网只需要放行：
+1. 为站点配置有效 HTTPS 证书；
+2. 将密钥放在网站静态目录以外；
+3. 在 Java 项目环境变量中配置商户号、应用编号、密钥路径和回调 URL；
+4. 按 [payment-setup.md](payment-setup.md) 完成微信 Native、支付宝电脑网站支付和退款验证；
+5. 重启 Java 项目。
 
-```text
-80
-443
-```
+## 8. 验收清单
 
-后端 `8087` 可以不对外开放，只给服务器本机访问。
+### 基础入口
 
-如果你想直接访问后端接口，需要在服务器安全组和宝塔防火墙里放行：
+- 用户端：`https://你的域名/`；
+- 管理员后台：`https://你的域名/admin`；
+- 测试用户：`110101199001011234 / 123456`；
+- 管理员：`admin / 123456`。
 
-```text
-8087
-```
+### 功能抽查
 
-课堂演示建议使用 Nginx 代理方式，不直接暴露 8087。
+- 用户登录、机位上机、预约和上机记录；
+- 点餐、优惠券、余额支付；已配置商户时再测试微信和支付宝；
+- 每日签到、邀请好友、团购券 `WGT-TEST-50`；
+- 呼叫网管、故障报修、后台服务工单处理；
+- 后台会员、电脑、上机、预约、点餐、营销活动页面；
+- 取消余额订单回余额；取消第三方已支付订单进入退款流程。
 
-## 十、访问系统
+## 9. 常见问题
 
-浏览器访问：
+### 页面刷新 404
 
-```text
-http://你的域名
-```
-
-或：
-
-```text
-http://服务器IP
-```
-
-管理员账号：
-
-```text
-用户名：admin
-密码：123456
-```
-
-用户端账号：
-
-```text
-身份证号：110101199001011234
-密码：123456
-```
-
-## 十一、功能测试
-
-登录：
-
-- 访问 `/` 进入用户系统，输入 `110101199001011234 / 123456`
-- 访问 `/admin` 进入管理员后台，输入 `admin / 123456`
-
-首页：
-
-- 查看会员总数、电脑总数、空闲电脑、使用中电脑
-- 查看电脑座位图
-- 不同状态显示不同颜色
-
-会员管理：
-
-- 新增会员
-- 修改会员类型和会员级别
-- 给散客充值，散客会自动变为普通会员
-
-电脑管理：
-
-- 新增电脑
-- 修改电脑状态
-- 查看空闲、使用中、预约锁定、维修中状态
-
-预约管理：
-
-- 选择会员和空闲电脑
-- 点击预约锁定
-- 电脑状态变成预约锁定
-- 可以取消预约或预约上机
-
-充值管理：
-
-- 选择会员
-- 输入充值金额
-- 充值后余额增加
-
-上机管理：
-
-- 选择会员和空闲电脑上机
-- 查看实时上机时长
-- 查看当前消费和余额提醒
-- 点击下机结算
-
-网吧点餐：
-
-- 新增商品
-- 会员点餐会扣余额
-- 余额不足会提示
-- 散客点餐可直接下单
-- 取消会员订单会退回余额
-
-## 十二、常见问题
-
-### 1. 登录提示服务器连接失败
-
-检查前端 `.env.production` 是否配置：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-检查 Nginx 是否配置了：
-
-```nginx
-location /api/ {
-    proxy_pass http://127.0.0.1:8087/;
-}
-```
-
-检查后端是否已启动。
-
-在宝塔终端依次执行：
-
-```bash
-curl http://127.0.0.1:8087/dashboard/statistics
-curl http://你的域名/api/dashboard/statistics
-```
-
-- 第一条失败：后端 jar 未启动、仍使用旧端口，或数据库连接失败。
-- 第一条成功、第二条失败：Nginx 的 `/api/` 反向代理未配置或未重载。
-- 两条都成功：重新构建前端并上传最新 `dist`，不要上传项目源码目录代替 `dist`。
-
-### 2. 后端启动失败，提示数据库连接失败
-
-检查：
-
-- MySQL 是否启动
-- 数据库名是否是 `wangguantong`
-- `application.yml` 的 username 和 password 是否正确
-- SQL 是否已经执行
-
-### 3. 页面刷新后 404
-
-Vue 使用前端路由，需要 Nginx 配置：
+确认存在：
 
 ```nginx
 location / {
@@ -405,49 +163,27 @@ location / {
 }
 ```
 
-### 4. 前端还是请求 localhost:8087
+### 接口 404
 
-说明前端打包时没有读取生产环境变量。
+确认前端构建变量为 `/api`，且 `proxy_pass http://127.0.0.1:8087/;` 末尾有 `/`。
 
-检查：
+### 接口 502 或 503
 
-```text
-wangguantong-web/.env.production
-```
-
-必须有：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-然后重新执行：
+检查 Java 项目是否启动、日志是否存在数据库错误，以及：
 
 ```bash
-npm run build
+curl http://127.0.0.1:8087/dashboard/statistics
 ```
 
-再把新的 `dist` 上传到宝塔网站目录。
+### 新功能报表或字段不存在
 
-### 5. 宝塔 Java 项目能启动但接口访问 404
+说明 JAR 与数据库结构版本不一致。备份数据库后补执行缺失的增量脚本，再重启 Java 项目。
 
-确认 jar 是最新打包的：
+### 微信/支付宝提示未配置
 
-```bash
-mvn clean package -DskipTests
-```
+这是默认行为。检查对应 `*_ENABLED=true`、全部商户参数、密钥文件权限和 HTTPS 回调地址；只配置其中一个平台时，另一个保持关闭。
 
-确认上传的是：
-
-```text
-target/wangguantong-server-1.0.0.jar
-```
-
-不是 `.jar.original` 文件。
-
-## 十三、推荐目录结构
-
-服务器上建议这样放：
+## 10. 推荐目录
 
 ```text
 /www/wwwroot/wangguantong
@@ -456,16 +192,11 @@ target/wangguantong-server-1.0.0.jar
 └── web
     ├── index.html
     └── assets
+
+/www/server/wangguantong-secrets
+├── wechat_apiclient_key.pem
+├── alipay_app_private_key.pem
+└── alipay_public_key.pem
 ```
 
-数据库脚本可以临时上传，用完后删除或备份。
-
-## 十四、配置真实支付
-
-微信和支付宝默认关闭，不配置时不影响余额支付。需要真实收款时，先为网站配置 HTTPS，再按照以下文档设置商户号、应用编号、密钥文件和异步回调地址：
-
-```text
-docs/payment-setup.md
-```
-
-密钥必须放在网站根目录之外，并通过宝塔 Java 项目环境变量传入。配置完成后重启后端。
+密钥目录不要放进网站根目录、前端 `dist` 或 Git 仓库。

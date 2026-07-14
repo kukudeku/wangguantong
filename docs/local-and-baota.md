@@ -1,170 +1,139 @@
-# 本地和宝塔双环境运行说明
+# 本地与宝塔双环境运行说明
 
-本项目现在支持两种运行方式：
+## 环境基线
 
-| 场景 | 前端启动方式 | 接口转发 | 说明 |
-| --- | --- | --- | --- |
-| 本地开发 | `npm run dev` | Vite `/api` → `localhost:8087` | 适合自己电脑写代码、课堂演示 |
-| 宝塔部署 | `npm run build` | Nginx `/api` → `127.0.0.1:8087` | 适合服务器 Nginx 反向代理 |
+| 场景 | 前端 | API 转发 | 后端 |
+|---|---|---|---|
+| 本地开发 | Vite `http://localhost:5173` | `/api/*` → `http://localhost:8087/*` | Spring Boot `8087` |
+| 宝塔生产 | Nginx 静态站点 | `/api/*` → `http://127.0.0.1:8087/*` | Java 项目 `8087` |
 
-访问规则：
+访问入口：
 
-```text
-默认用户系统：/
-用户系统页面：/user
-用户登录页面：/user/login
-管理员后台：/admin
-管理员登录页面：/admin/login
-```
+- 用户端：`/` 或 `/user`；未登录进入 `/user/login`；
+- 管理员后台：`/admin`；未登录进入 `/admin/login`。
 
-前端请求地址在这里配置：
-
-```text
-wangguantong-web/src/utils/request.js
-```
-
-代码逻辑是：
+前端 `src/utils/request.js` 使用：
 
 ```js
 baseURL: import.meta.env.VITE_API_BASE_URL || '/api'
 ```
 
-意思是：
+建议本地和生产都使用 `/api`，由对应代理去掉 `/api` 前缀。不要在生产构建中写 `localhost:8087`，因为浏览器的 `localhost` 指访问者自己的电脑。
 
-- 如果配置了 `VITE_API_BASE_URL`，就用配置的地址。
-- 如果没有配置，就默认用 `/api`，本地由 Vite 转发到 `8087`，宝塔由 Nginx 转发到 `8087`。
+## 本地运行
 
-## 一、本地运行方式
+### 1. 初始化 MySQL
 
-本地运行时，不需要创建 `.env.production`。
+全新安装：
 
-### 1. 启动 MySQL
-
-本地 MySQL 中执行：
-
-```sql
-source /Users/zhaoyuhan/wangguantong/database/wangguantong.sql;
+```bash
+mysql -uroot -p < database/wangguantong.sql
 ```
 
-或者把 SQL 内容复制到 Navicat、DataGrip、phpMyAdmin 中执行。
+该脚本会删除并重建 `wangguantong` 数据库，仅适合全新安装或允许清空数据的环境。
 
-### 2. 修改后端数据库密码
+### 2. 配置后端
 
-打开：
-
-```text
-/Users/zhaoyuhan/wangguantong/wangguantong-server/src/main/resources/application.yml
-```
-
-本地可以这样配置：
+修改 `wangguantong-server/src/main/resources/application.yml`：
 
 ```yaml
+server:
+  port: 8087
+
 spring:
   datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/wangguantong?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
     password: 你的本地MySQL密码
 ```
 
-### 3. 启动后端
+真实支付默认关闭，无需填写商户密钥即可启动。
+
+### 3. 启动后端和前端
 
 ```bash
-cd /Users/zhaoyuhan/wangguantong/wangguantong-server
+cd wangguantong-server
 mvn spring-boot:run
 ```
 
-后端地址：
-
-```text
-http://localhost:8087
-```
-
-### 4. 启动前端
-
-```bash
-cd /Users/zhaoyuhan/wangguantong/wangguantong-web
-npm install
-npm run dev
-```
-
-前端地址：
-
-```text
-http://localhost:5173
-```
-
-本地访问：
-
-```text
-用户系统：http://localhost:5173/
-管理员后台：http://localhost:5173/admin
-```
-
-本地开发时，前端会请求：
-
-```text
-http://localhost:8087
-```
-
-## 二、宝塔部署方式
-
-宝塔部署时，前端不能继续请求 `localhost:8087`。
-
-原因是：用户浏览器里的 `localhost` 指的是用户自己的电脑，不是你的服务器。
-
-所以宝塔部署要使用：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-然后用 Nginx 把 `/api` 转发到服务器本机的 `8087`。
-
-### 1. 创建生产环境配置
-
-在前端目录创建：
-
-```text
-wangguantong-web/.env.production
-```
-
-内容：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-项目里已经提供了示例文件：
-
-```text
-wangguantong-web/.env.production.example
-```
-
-可以参考它。
-
-### 2. 打包前端
+另开终端：
 
 ```bash
 cd wangguantong-web
 npm install
+npm run dev
+```
+
+本地可以不创建 `.env.development`。如需显式配置，将 `.env.development.example` 复制为 `.env.development`，保持：
+
+```env
+VITE_API_BASE_URL=/api
+```
+
+### 4. 本地验证
+
+```bash
+curl http://127.0.0.1:8087/dashboard/statistics
+```
+
+浏览器访问 `http://localhost:5173`，分别验证用户端和 `/admin`。
+
+## 已有数据库升级
+
+升级前必须备份数据库。不要执行完整 `wangguantong.sql`，也不要在不清楚当前结构时盲目重复执行全部脚本。
+
+| 脚本 | 适用能力 | 可重复性说明 |
+|---|---|---|
+| `update_20260708_features.sql` | 会员等级、点餐、预约 | 早期基础升级 |
+| `update_20260708_user_login.sql` | 用户账号、密码、身份证号 | 带字段存在判断 |
+| `update_20260708_member_id_card.sql` | 单独补身份证号字段 | 带字段存在判断 |
+| `update_20260708_food_category.sql` | 商品分类 | 带字段存在判断 |
+| `update_20260713_coupon_sign_in.sql` | 优惠券、签到、购物车优惠字段 | 可重复建表，字段带判断 |
+| `update_20260713_voucher_change_repair.sql` | 团购券、上机分段字段、报修 | 字段带判断 |
+| `update_20260714_food_payment.sql` | 第三方支付主记录和退款记录 | 可重复执行 |
+| `update_20260714_promotion.sql` | 邀请码、推广规则和奖励记录 | 可重复执行 |
+| `update_20260714_service_center.sql` | 报修扩展为统一服务工单 | 只执行一次 |
+
+从早期版本逐步升级时，建议按表中顺序执行；已经具备对应字段或表的环境只执行缺失项。最后执行服务中心脚本并重启后端。
+
+示例：
+
+```bash
+mysql -u你的用户 -p wangguantong < database/update_20260713_coupon_sign_in.sql
+mysql -u你的用户 -p wangguantong < database/update_20260713_voucher_change_repair.sql
+mysql -u你的用户 -p wangguantong < database/update_20260714_food_payment.sql
+mysql -u你的用户 -p wangguantong < database/update_20260714_promotion.sql
+mysql -u你的用户 -p wangguantong < database/update_20260714_service_center.sql
+```
+
+## 宝塔生产运行速查
+
+### 1. 构建
+
+```bash
+cd wangguantong-server
+mvn clean package -DskipTests
+
+cd ../wangguantong-web
+npm install
 npm run build
 ```
 
-生成：
+产物：
 
-```text
-wangguantong-web/dist
+- 后端：`wangguantong-server/target/wangguantong-server-1.0.0.jar`；
+- 前端：`wangguantong-web/dist/`。
+
+### 2. 前端生产变量
+
+构建前创建 `wangguantong-web/.env.production`：
+
+```env
+VITE_API_BASE_URL=/api
 ```
 
-上传 `dist` 里的文件到宝塔网站目录，例如：
-
-```text
-/www/wwwroot/wangguantong/web
-```
-
-### 3. 宝塔 Nginx 配置
-
-在宝塔网站配置文件中加入：
+### 3. Nginx
 
 ```nginx
 location /api/ {
@@ -180,176 +149,17 @@ location / {
 }
 ```
 
-这样浏览器访问：
+`proxy_pass` 末尾的 `/` 不能遗漏，否则后端可能收到带 `/api` 的错误路径。
 
-```text
-http://你的域名/api/admin/login
-```
-
-实际会转发到：
-
-```text
-http://127.0.0.1:8087/admin/login
-```
-
-### 4. 宝塔启动后端
-
-后端仍然监听：
-
-```text
-8087
-```
-
-在宝塔 Java 项目管理器中添加：
-
-```text
-项目类型：Spring Boot
-运行端口：8087
-JDK版本：Java 17
-jar文件：wangguantong-server-1.0.0.jar
-```
-
-## 三、不要混用的地方
-
-### 本地开发使用 Vite 代理
-
-项目已经在 `vite.config.js` 中配置 `/api` 代理到 `http://localhost:8087`。
-
-所以本地建议：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-也可以不创建 `.env.development`，直接使用代码默认值 `/api`。
-
-### 宝塔部署不要写死 `localhost:8087`
-
-宝塔部署如果前端打包成：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-用户浏览器会请求用户自己电脑的 `localhost:8087`，肯定失败。
-
-所以宝塔必须使用：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-## 四、推荐文件配置
-
-本地开发：
-
-```text
-不需要 .env 文件
-```
-
-或者创建：
-
-```text
-wangguantong-web/.env.development
-```
-
-内容：
-
-```env
-VITE_API_BASE_URL=http://localhost:8087
-```
-
-宝塔部署：
-
-```text
-wangguantong-web/.env.production
-```
-
-内容：
-
-```env
-VITE_API_BASE_URL=/api
-```
-
-## 五、验证方式
-
-本地验证：
-
-```bash
-cd wangguantong-server
-mvn spring-boot:run
-```
-
-```bash
-cd wangguantong-web
-npm run dev
-```
-
-访问：
-
-```text
-http://localhost:5173
-```
-
-宝塔验证：
+### 4. 生产验证
 
 ```bash
 curl http://127.0.0.1:8087/dashboard/statistics
+curl https://你的域名/api/dashboard/statistics
 ```
 
-浏览器访问：
+第一条验证 Java 服务，第二条验证 HTTPS 与 Nginx 代理。页面刷新返回 404 时检查 `try_files`；接口 502/503 时检查 Java 项目和 `8087` 监听状态。
 
-```text
-http://你的域名
-```
+## 支付说明
 
-登录：
-
-```text
-用户端：110101199001011234 / 123456
-管理员后台：admin / 123456
-```
-
-## 六、一句话总结
-
-本地：
-
-```text
-用户端 localhost:5173/ -> Vite /api -> 后端 localhost:8087
-后台 localhost:5173/admin -> Vite /api -> 后端 localhost:8087
-```
-
-宝塔：
-
-```text
-浏览器访问域名 -> Nginx /api -> 后端 127.0.0.1:8087
-```
-
-## 七、真实支付说明
-
-余额支付无需配置。微信支付和支付宝支付需要商户平台资料、公网 HTTPS 回调地址及服务器密钥文件，完整步骤见：
-
-```text
-docs/payment-setup.md
-```
-
-已有数据库还要执行：
-
-```text
-database/update_20260714_food_payment.sql
-database/update_20260714_promotion.sql
-```
-
-未配置商户资料时，后端仍可正常启动，余额支付和其他系统功能不受影响。
-
-## 八、推广计划数据库升级
-
-新安装项目直接执行 `database/wangguantong.sql`，其中已经包含推广规则、邀请码和邀请记录表。
-
-本地或宝塔已有数据库需要先执行：
-
-```text
-database/update_20260714_promotion.sql
-```
-
-再重启 Spring Boot 后端。升级脚本可以重复执行，会保留原有会员数据，并自动为已有会员生成唯一邀请码。默认规则为邀请人奖励 `10 元`、新用户奖励 `5 元`，管理员可在“营销活动 > 推广计划”中修改或停用。
+余额支付无需配置。微信 Native 与支付宝电脑网站支付的环境变量、密钥和回调地址见 [payment-setup.md](payment-setup.md)。未启用的平台被选择时，后端会返回未配置提示，不会影响其他业务。

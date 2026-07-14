@@ -545,7 +545,7 @@
     <aside class="doc-sidebar" id="docSidebar" aria-label="文档目录">
       <div class="doc-brand">
         <div class="brand-mark">W</div>
-        <div><strong>网管通</strong><span>原型设计书 V1.0</span></div>
+        <div><strong>网管通</strong><span>原型设计书 V2.0</span></div>
       </div>
       <nav class="doc-nav">
         <a href="#overview"><span class="nav-index">01</span><span>项目概览</span></a>
@@ -572,13 +572,13 @@
         <div class="cover-grid">
           <div class="cover-copy">
             <h1>网管通<br>电竞网吧运营管理系统</h1>
-            <p>本原型设计书覆盖用户自助端与后台管理端。重点验证登录注册、座位上机、实时计费、自助点餐、充值、消费记录及后台运营管理流程。</p>
+            <p>本原型设计书覆盖当前用户自助端与管理员后台的信息架构，并用代表性页面验证上机预约、优惠点餐、支付退款、会员营销、团购券和服务工单流程。</p>
             <div class="version-row">
-              <span class="tag">版本 V1.0</span>
+              <span class="tag">版本 V2.0</span>
               <span class="tag">浅色商务风格</span>
               <span class="tag">桌面优先</span>
               <span class="tag">支持移动端</span>
-              <span class="tag">2026-07-13</span>
+              <span class="tag">2026-07-14</span>
             </div>
           </div>
           <div class="cover-summary">
@@ -594,8 +594,8 @@
         </div>
         <div class="metric-grid">
           <div class="metric"><span>终端体系</span><strong>2</strong><small> 用户端 / 管理端</small></div>
-          <div class="metric"><span>核心页面</span><strong>9</strong><small> 个业务页面</small></div>
-          <div class="metric"><span>交互演示</span><strong>5</strong><small> 组可操作原型</small></div>
+          <div class="metric"><span>功能入口</span><strong>28</strong><small> 个两端菜单项</small></div>
+          <div class="metric"><span>交互演示</span><strong>5</strong><small> 组代表性原型</small></div>
           <div class="metric"><span>适配宽度</span><strong>375+</strong><small> px</small></div>
         </div>
       </section>
@@ -608,26 +608,26 @@
           <div class="ia-column">
             <div class="ia-root">用户自助端 /</div>
             <div class="ia-nodes">
-              <div class="ia-node"><strong>身份入口</strong><span>登录、注册、修改密码</span></div>
-              <div class="ia-node"><strong>座位上机</strong><span>座位图、确认上机、预约、下机</span></div>
-              <div class="ia-node"><strong>自助点餐</strong><span>分类、数量、购物车、下单</span></div>
-              <div class="ia-node"><strong>账户中心</strong><span>充值、余额明细、上机与订单记录</span></div>
+              <div class="ia-node"><strong>上机服务</strong><span>机位大厅、当前上机、我的预约、上机记录</span></div>
+              <div class="ia-node"><strong>点餐服务</strong><span>商品选购、购物车、优惠券、三种支付、我的订单</span></div>
+              <div class="ia-node"><strong>会员活动</strong><span>每日签到、我的优惠券、邀请好友与记录</span></div>
+              <div class="ia-node"><strong>服务与账户</strong><span>呼叫网管、故障报修、余额、团购验券、改密</span></div>
             </div>
           </div>
           <div class="ia-column">
             <div class="ia-root">后台管理端 /admin</div>
             <div class="ia-nodes">
-              <div class="ia-node"><strong>经营看板</strong><span>会员、电脑、充值、上机统计</span></div>
-              <div class="ia-node"><strong>基础资料</strong><span>会员、电脑、商品分类</span></div>
-              <div class="ia-node"><strong>业务处理</strong><span>充值、当前上机、预约、订单</span></div>
-              <div class="ia-node"><strong>历史查询</strong><span>上机历史、充值记录、订单记录</span></div>
+              <div class="ia-node"><strong>运营基础</strong><span>首页看板、会员、余额、电脑、预约、上机</span></div>
+              <div class="ia-node"><strong>点餐管理</strong><span>订单、商品、优惠金额、支付状态与退款</span></div>
+              <div class="ia-node"><strong>服务中心</strong><span>呼叫网管与故障报修工单处理</span></div>
+              <div class="ia-node"><strong>营销活动</strong><span>团购券、优惠券、签到规则、推广计划</span></div>
             </div>
           </div>
         </div>
         <div class="flow-line" aria-label="用户主流程">
           <div class="flow-step"><small>STEP 01</small><strong>身份登录</strong><span>使用身份证号与密码进入系统</span></div>
           <div class="flow-step"><small>STEP 02</small><strong>确认余额</strong><span>查看余额、会员级别和账户状态</span></div>
-          <div class="flow-step"><small>STEP 03</small><strong>选择服务</strong><span>上机、预约、充值或自助点餐</span></div>
+          <div class="flow-step"><small>STEP 03</small><strong>选择服务</strong><span>上机、点餐、活动、工单或账户服务</span></div>
           <div class="flow-step"><small>STEP 04</small><strong>完成操作</strong><span>明确确认并展示业务结果</span></div>
           <div class="flow-step"><small>STEP 05</small><strong>查询记录</strong><span>核对余额与历史明细</span></div>
         </div>
@@ -689,7 +689,7 @@
       <section class="doc-section" id="prototype">
         <p class="section-kicker">Interactive prototype</p>
         <h2>交互原型</h2>
-        <p class="section-lead">点击下方标签切换页面。原型中的上机确认、状态切换、商品加减、购物车和后台菜单可直接操作。</p>
+        <p class="section-lead">点击下方标签切换代表性页面。完整入口以“信息架构”为准；原型中的上机确认、商品加减、购物车和后台菜单可直接操作。</p>
         <div class="prototype-toolbar">
           <div class="screen-tabs" role="tablist" aria-label="原型页面">
             <button class="screen-tab active" type="button" data-screen="login">用户登录</button>
@@ -708,7 +708,7 @@
                 <div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>电竞网吧自助服务</span></div></div>
                 <div class="login-aside-copy">
                   <h3>一站式自助服务</h3>
-                  <p>登录后可查看座位、确认上机、预约电脑、自助点餐、模拟充值并查询消费记录。</p>
+                  <p>登录后可上机预约、优惠点餐、签到领券、邀请好友、核销团购券、呼叫网管并查询记录。</p>
                 </div>
                 <div class="login-benefits">
                   <div class="login-benefit"><strong>座位透明</strong><span>实时查看电脑状态</span></div>
@@ -732,10 +732,11 @@
                   </div>
                   <div class="auth-pane" data-auth-pane="register">
                     <h2 style="margin-bottom:6px">注册账号</h2>
-                    <p style="color:var(--muted);margin-bottom:24px">填写身份信息后创建普通会员账号</p>
+                    <p style="color:var(--muted);margin-bottom:24px">填写身份信息创建普通会员，可选填邀请码领取活动奖励</p>
                     <div class="form-field"><label for="regName">姓名</label><input class="input" id="regName" placeholder="请输入真实姓名"></div>
                     <div class="form-field"><label for="regIdCard">身份证号</label><input class="input" id="regIdCard" placeholder="请输入身份证号"></div>
                     <div class="form-field"><label for="regPhone">手机号</label><input class="input" id="regPhone" placeholder="请输入手机号"></div>
+                    <div class="form-field"><label for="regInvite">邀请码（选填）</label><input class="input" id="regInvite" placeholder="例如 WG000001"></div>
                     <div class="form-field"><label for="regPassword">设置密码</label><input class="input" id="regPassword" type="password" placeholder="请输入登录密码"></div>
                     <button class="btn btn-primary form-submit" type="button">注册</button>
                   </div>
@@ -747,7 +748,7 @@
           <div class="screen" data-screen-panel="seat">
             <header class="app-header">
               <div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>电竞网吧自助端</span></div></div>
-              <nav class="app-nav"><button class="active" type="button">座位上机</button><button type="button">自助点餐</button><button type="button">消费记录</button></nav>
+              <nav class="app-nav"><button class="active" type="button">上机服务</button><button type="button">点餐服务</button><button type="button">会员活动</button><button type="button">服务中心</button><button type="button">账户服务</button></nav>
               <div class="app-user"><strong>张三</strong><button class="btn btn-secondary" type="button">退出</button></div>
             </header>
             <div class="app-body">
@@ -786,15 +787,15 @@
           </div>
 
           <div class="screen" data-screen-panel="food">
-            <header class="app-header"><div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>电竞网吧自助端</span></div></div><nav class="app-nav"><button type="button">座位上机</button><button class="active" type="button">自助点餐</button><button type="button">消费记录</button></nav><div class="app-user"><strong>张三</strong><button class="btn btn-secondary" type="button">退出</button></div></header>
-            <div class="app-body"><div class="app-page-head"><div><span class="status status-blue">普通会员</span><h3>自助点餐</h3><p>选择商品数量后统一下单，费用从余额扣除。</p></div><div class="account-strip"><div class="avatar">张</div><div class="account-copy"><strong>张三</strong><span>13800000001</span></div><div class="balance"><span>余额</span><strong>￥86.00</strong></div></div></div>
+            <header class="app-header"><div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>电竞网吧自助端</span></div></div><nav class="app-nav"><button type="button">上机服务</button><button class="active" type="button">点餐服务</button><button type="button">会员活动</button><button type="button">服务中心</button><button type="button">账户服务</button></nav><div class="app-user"><strong>张三</strong><button class="btn btn-secondary" type="button">退出</button></div></header>
+            <div class="app-body"><div class="app-page-head"><div><span class="status status-blue">普通会员</span><h3>自助点餐</h3><p>选择商品和优惠券后，使用余额、微信或支付宝统一结算。</p></div><div class="account-strip"><div class="avatar">张</div><div class="account-copy"><strong>张三</strong><span>13800000001</span></div><div class="balance"><span>余额</span><strong>￥86.00</strong></div></div></div>
               <div class="shop-grid"><section class="app-panel"><div class="app-panel-head"><div><h3>商品列表</h3><p>按分类快速筛选商品。</p></div></div><div class="category-tabs"><button class="category-tab active" data-category="全部" type="button">全部</button><button class="category-tab" data-category="饮料" type="button">饮料</button><button class="category-tab" data-category="餐食" type="button">餐食</button><button class="category-tab" data-category="零食" type="button">零食</button></div><div class="food-grid" id="foodGrid"></div></section>
-                <aside class="app-panel"><div class="app-panel-head"><div><h3>购物车</h3><p id="cartCount">未选择商品</p></div></div><div class="cart-list" id="cartList"><div class="cart-empty">请从商品列表设置数量</div></div><div class="cart-total"><span>合计</span><strong id="cartTotal">￥0.00</strong></div><div class="cart-actions"><button class="btn btn-secondary" id="clearCart" type="button" disabled>清空</button><button class="btn btn-primary" id="placeOrder" type="button" disabled>下单</button></div></aside></div>
+                <aside class="app-panel"><div class="app-panel-head"><div><h3>购物车</h3><p id="cartCount">未选择商品</p></div></div><div class="cart-list" id="cartList"><div class="cart-empty">请从商品列表设置数量</div></div><div class="form-field"><label>优惠券</label><select class="input"><option>不使用优惠券</option><option>满 20 减 5 元</option></select></div><div class="form-field"><label>支付方式</label><select class="input"><option>余额支付</option><option>微信支付</option><option>支付宝支付</option></select></div><div class="cart-total"><span>实付合计</span><strong id="cartTotal">￥0.00</strong></div><div class="cart-actions"><button class="btn btn-secondary" id="clearCart" type="button" disabled>清空</button><button class="btn btn-primary" id="placeOrder" type="button" disabled>提交订单</button></div></aside></div>
             </div>
           </div>
 
           <div class="screen" data-screen-panel="records">
-            <header class="app-header"><div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>电竞网吧自助端</span></div></div><nav class="app-nav"><button type="button">座位上机</button><button type="button">自助点餐</button><button class="active" type="button">消费记录</button></nav><div class="app-user"><strong>张三</strong><button class="btn btn-secondary" type="button">退出</button></div></header>
+            <header class="app-header"><div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>电竞网吧自助端</span></div></div><nav class="app-nav"><button type="button">上机服务</button><button type="button">点餐服务</button><button type="button">会员活动</button><button type="button">服务中心</button><button class="active" type="button">账户服务</button></nav><div class="app-user"><strong>张三</strong><button class="btn btn-secondary" type="button">退出</button></div></header>
             <div class="app-body"><div class="app-page-head"><div><span class="status status-green">账户正常</span><h3>我的记录</h3><p>查看余额明细、上机记录和订单状态。</p></div><div class="account-strip"><div class="avatar">张</div><div class="account-copy"><strong>张三</strong><span>普通会员</span></div><div class="balance"><span>余额</span><strong>￥86.00</strong></div></div></div>
               <div class="app-panel"><div class="record-tabs"><button class="record-tab active" data-record="balance" type="button">余额明细</button><button class="record-tab" data-record="online" type="button">上机记录</button><button class="record-tab" data-record="orders" type="button">订单记录</button></div>
                 <div class="record-panel active table-scroll" data-record-panel="balance"><table class="data-table"><thead><tr><th>时间</th><th>类型</th><th>说明</th><th>金额</th></tr></thead><tbody><tr><td>2026-07-13 18:10:00</td><td><span class="status status-green">充值</span></td><td>会员充值</td><td style="color:var(--green)">+￥50.00</td></tr><tr><td>2026-07-13 19:44:04</td><td><span class="status status-blue">上机</span></td><td>B001 上机实时扣费</td><td style="color:var(--red)">-￥10.00</td></tr><tr><td>2026-07-13 20:15:30</td><td><span class="status status-amber">点餐</span></td><td>泡面 x 2（已完成）</td><td style="color:var(--red)">-￥12.00</td></tr></tbody></table></div>
@@ -805,14 +806,16 @@
           </div>
 
           <div class="screen" data-screen-panel="admin">
-            <div class="admin-shell"><aside class="admin-side"><div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>运营管理后台</span></div></div><nav class="admin-menu"><button class="active" data-admin="dashboard" type="button">经营看板</button><button data-admin="members" type="button">会员管理</button><button data-admin="online" type="button">上机管理</button><button data-admin="orders" type="button">点餐订单</button><button data-admin="computers" type="button">电脑机位</button><button data-admin="reservations" type="button">预约管理</button></nav></aside>
-              <div class="admin-content"><header class="admin-top"><strong id="adminTitle">经营看板</strong><div>管理员：admin <button class="btn btn-secondary" type="button">退出</button></div></header><div class="admin-page">
+            <div class="admin-shell"><aside class="admin-side"><div class="prototype-brand"><div class="brand-mark">W</div><div><strong>网管通</strong><span>运营管理后台</span></div></div><nav class="admin-menu"><button class="active" data-admin="dashboard" type="button">数据概览</button><button data-admin="members" type="button">会员服务</button><button data-admin="computers" type="button">机位管理</button><button data-admin="online" type="button">上机运营</button><button data-admin="orders" type="button">点餐管理</button><button data-admin="service" type="button">服务中心</button><button data-admin="marketing" type="button">营销活动</button><button data-admin="reservations" type="button">预约管理</button></nav></aside>
+              <div class="admin-content"><header class="admin-top"><strong id="adminTitle">数据概览</strong><div>管理员：admin <button class="btn btn-secondary" type="button">退出</button></div></header><div class="admin-page">
                 <div class="admin-module active" data-admin-panel="dashboard"><div class="dashboard-metrics"><div class="dashboard-metric"><span>会员总数</span><strong>16</strong></div><div class="dashboard-metric"><span>电脑总数</span><strong>40</strong></div><div class="dashboard-metric"><span>空闲电脑</span><strong>28</strong></div><div class="dashboard-metric"><span>使用中</span><strong>9</strong></div><div class="dashboard-metric"><span>今日充值</span><strong>￥560</strong></div><div class="dashboard-metric"><span>今日上机</span><strong>34 次</strong></div></div><div class="app-panel"><h3>今日运营摘要</h3><p style="color:var(--muted)">看板仅展示核心数字，详细数据进入对应业务模块查询。</p></div></div>
                 <div class="admin-module" data-admin-panel="members"><div class="app-panel"><div class="table-toolbar"><div class="search"><input class="input" placeholder="姓名 / 身份证号 / 手机号"><button class="btn btn-secondary" type="button">查询</button></div><button class="btn btn-primary" type="button">新增会员</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>姓名</th><th>身份证号</th><th>手机</th><th>余额</th><th>级别</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>张三</td><td>110101199001011234</td><td>13800000001</td><td>￥86.00</td><td>普通会员</td><td><span class="status status-green">正常</span></td><td><div class="action-group"><button class="btn btn-secondary">编辑</button><button class="btn btn-primary">充值</button><button class="btn btn-danger">删除</button></div></td></tr></tbody></table></div></div></div>
                 <div class="admin-module" data-admin-panel="online"><div class="app-panel"><div class="table-toolbar"><h3>当前上机</h3><button class="btn btn-secondary" type="button">刷新</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>会员</th><th>电脑</th><th>开始时间</th><th>实时上机</th><th>当前消费</th><th>余额提示</th><th>操作</th></tr></thead><tbody><tr><td>张三</td><td>B001</td><td>2026-07-13 19:44:04</td><td>1 小时 33 分</td><td>￥10.00</td><td><span class="status status-amber">余额偏低</span></td><td><button class="btn btn-primary">下机结算</button></td></tr></tbody></table></div></div></div>
                 <div class="admin-module" data-admin-panel="orders"><div class="app-panel"><div class="table-toolbar"><h3>点餐订单</h3><button class="btn btn-secondary">刷新</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>顾客</th><th>商品</th><th>数量</th><th>金额</th><th>时间</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>张三</td><td>泡面</td><td>2</td><td>￥12.00</td><td>2026-07-13 20:15:30</td><td><span class="status status-blue">已下单</span></td><td><div class="action-group"><button class="btn btn-primary">完成订单</button><button class="btn btn-danger">取消</button></div></td></tr></tbody></table></div></div></div>
                 <div class="admin-module" data-admin-panel="computers"><div class="app-panel"><div class="table-toolbar"><h3>电脑机位</h3><button class="btn btn-primary">新增电脑</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>编号</th><th>区域</th><th>单价</th><th>状态</th><th>备注</th><th>操作</th></tr></thead><tbody><tr><td>A001</td><td>电竞一区</td><td>￥6/小时</td><td><span class="status status-green">空闲</span></td><td>-</td><td><div class="action-group"><button class="btn btn-secondary">编辑</button><button class="btn btn-danger">删除</button></div></td></tr></tbody></table></div></div></div>
                 <div class="admin-module" data-admin-panel="reservations"><div class="app-panel"><div class="table-toolbar"><h3>预约管理</h3><button class="btn btn-secondary">刷新</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>会员</th><th>电脑</th><th>预约时间</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>李四</td><td>A003</td><td>2026-07-13 21:30:00</td><td>2026-07-13 20:52:00</td><td><span class="status status-blue">已预约</span></td><td><div class="action-group"><button class="btn btn-primary">预约上机</button><button class="btn btn-danger">取消</button></div></td></tr></tbody></table></div></div></div>
+                <div class="admin-module" data-admin-panel="service"><div class="app-panel"><div class="table-toolbar"><h3>服务工单</h3><button class="btn btn-secondary">刷新</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>类型</th><th>用户</th><th>电脑/位置</th><th>内容</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>故障报修</td><td>张三</td><td>B002</td><td>键盘部分按键失灵</td><td><span class="status status-amber">待处理</span></td><td><button class="btn btn-primary">受理工单</button></td></tr><tr><td>呼叫网管</td><td>李四</td><td>电竞一区 A003</td><td>需要协助登录游戏</td><td><span class="status status-blue">处理中</span></td><td><button class="btn btn-primary">完成工单</button></td></tr></tbody></table></div></div></div>
+                <div class="admin-module" data-admin-panel="marketing"><div class="app-panel"><div class="table-toolbar"><h3>营销活动</h3><button class="btn btn-primary">配置规则</button></div><div class="dashboard-metrics"><div class="dashboard-metric"><span>团购券</span><strong>核销充值</strong></div><div class="dashboard-metric"><span>优惠券</span><strong>模板与状态</strong></div><div class="dashboard-metric"><span>签到规则</span><strong>按连续天数发券</strong></div><div class="dashboard-metric"><span>推广计划</span><strong>邀请双方奖励</strong></div></div></div></div>
               </div></div></div>
           </div>
         </div>
@@ -830,7 +833,10 @@
               <tr><td>电脑机位</td><td><span class="status status-blue">使用中</span></td><td>下机结算</td><td>空闲</td></tr>
               <tr><td>预约记录</td><td><span class="status status-blue">已预约</span></td><td>预约上机、取消；超时自动取消</td><td>已上机 / 已取消</td></tr>
               <tr><td>上机记录</td><td><span class="status status-blue">进行中</span></td><td>实时扣费、主动下机、余额不足自动下机</td><td>已完成</td></tr>
-              <tr><td>点餐订单</td><td><span class="status status-blue">已下单</span></td><td>完成订单、取消订单</td><td>已完成 / 已取消</td></tr>
+              <tr><td>点餐订单</td><td><span class="status status-amber">待支付</span></td><td>继续支付、超时关闭</td><td>已下单 / 已取消</td></tr>
+              <tr><td>点餐订单</td><td><span class="status status-blue">已下单</span></td><td>完成订单、取消并退款</td><td>已完成 / 退款中 / 已取消</td></tr>
+              <tr><td>优惠券</td><td><span class="status status-green">可使用</span></td><td>满足门槛时抵扣订单</td><td>已使用 / 已过期</td></tr>
+              <tr><td>服务工单</td><td><span class="status status-amber">待处理</span></td><td>受理、取消</td><td>处理中 / 已取消</td></tr>
             </tbody>
           </table>
         </div>
@@ -838,7 +844,9 @@
           <div class="rule"><strong>上机确认</strong><span>点击“上机”后先展示电脑编号、单价与首小时扣费，确认后才提交。</span></div>
           <div class="rule"><strong>实时扣费</strong><span>首小时立即扣费，之后按计费小时补扣差额，余额不足自动下机。</span></div>
           <div class="rule"><strong>预约限制</strong><span>只能预约未来 1 小时内的时间，超时未上机自动取消并释放电脑。</span></div>
-          <div class="rule"><strong>购物车</strong><span>商品卡片负责数量加减；购物车只展示清单、总额、清空与下单。</span></div>
+          <div class="rule"><strong>购物车支付</strong><span>选择优惠券和余额/微信/支付宝；第三方回调验签后才确认订单。</span></div>
+          <div class="rule"><strong>营销防重复</strong><span>签到按日唯一，团购券只能核销一次，新用户只获得一次邀请奖励。</span></div>
+          <div class="rule"><strong>服务工单</strong><span>故障受理后电脑进入维修中，完成或取消后恢复空闲。</span></div>
           <div class="rule"><strong>普通会员</strong><span>上机不打折；黄金会员 9 折；钻石会员 8 折。</span></div>
           <div class="rule"><strong>时间格式</strong><span>页面统一显示 yyyy-MM-dd HH:mm:ss，不显示接口中的字母 T。</span></div>
         </div>
@@ -856,7 +864,7 @@
           <div class="rule"><strong>可访问性</strong><span>交互控件支持键盘聚焦；状态包含文字；对比度满足常规阅读。</span></div>
           <div class="rule"><strong>离线可用</strong><span>HTML 不引用外部脚本、字体或图片，可直接双击打开用于答辩。</span></div>
         </div>
-        <div class="footer-note" style="margin-top:22px"><strong>原型交付结论</strong>该设计将顾客的高频任务收敛为“登录、选服务、确认、查看记录”，将管理员的任务收敛为“查询、处理、复核”。页面保持浅色商务风格，关键操作使用明确按钮与状态反馈。</div>
+        <div class="footer-note" style="margin-top:22px"><strong>原型交付结论</strong>当前设计将用户任务组织为上机、点餐、活动、推广、服务与账户六组入口，将后台组织为数据、会员、机位、服务、上机、点餐与营销七个业务域。页面保持浅色商务风格，关键操作使用明确按钮与状态反馈。</div>
       </section>
     </main>
   </div>
