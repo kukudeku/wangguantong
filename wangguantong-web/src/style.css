@@ -172,6 +172,12 @@ select {
   word-break: keep-all;
 }
 
+.admin-shell .no-wrap-table .arco-table-cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-shell .no-wrap-table .arco-table-th {
   height: 44px;
   color: #4e5969;

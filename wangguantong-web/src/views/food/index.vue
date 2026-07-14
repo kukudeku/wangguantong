@@ -65,7 +65,7 @@
           </a-space>
         </a-form>
 
-        <a-table class="no-wrap-table" :columns="orderColumns" :data="orders" row-key="id" :pagination="false" :scroll="{ x: 1780 }">
+        <a-table class="no-wrap-table" :columns="orderColumns" :data="orders" row-key="id" :pagination="false" :scroll="{ x: 1980 }">
           <template #status="{ record }">
             <a-tag :color="orderStatusColor(record.status)">{{ record.status }}</a-tag>
           </template>
@@ -241,20 +241,20 @@ const itemForm = reactive({ id: null, name: '', category: '饮料', price: 1, st
 const orderColumns = [
   { title: '订单ID', dataIndex: 'id', width: 90 },
   { title: '订单批次', dataIndex: 'batchNo', width: 190 },
-  { title: '顾客类型', dataIndex: 'customerType' },
-  { title: '顾客姓名', dataIndex: 'customerName' },
-  { title: '商品', dataIndex: 'foodItemName' },
-  { title: '单价', dataIndex: 'price' },
-  { title: '数量', dataIndex: 'quantity' },
+  { title: '顾客类型', dataIndex: 'customerType', width: 100 },
+  { title: '顾客姓名', dataIndex: 'customerName', width: 110 },
+  { title: '商品', dataIndex: 'foodItemName', width: 140 },
+  { title: '单价', dataIndex: 'price', width: 90 },
+  { title: '数量', dataIndex: 'quantity', width: 80 },
   { title: '优惠前', dataIndex: 'grossAmount', width: 100 },
   { title: '优惠金额', dataIndex: 'discountAmount', width: 100 },
   { title: '优惠券', dataIndex: 'couponName', width: 150 },
   { title: '实付金额', dataIndex: 'totalAmount', width: 100 },
   { title: '支付方式', dataIndex: 'paymentMethod', width: 120 },
   { title: '支付状态', slotName: 'paymentStatus', width: 110 },
-  { title: '状态', slotName: 'status' },
-  { title: '下单时间', slotName: 'createTime' },
-  { title: '操作', slotName: 'actions', width: 180 }
+  { title: '状态', slotName: 'status', width: 90 },
+  { title: '下单时间', slotName: 'createTime', width: 190 },
+  { title: '操作', slotName: 'actions', width: 220 }
 ]
 
 const itemColumns = [

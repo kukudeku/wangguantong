@@ -91,11 +91,11 @@ const query = reactive({
 
 const columns = [
   { title: '预约ID', dataIndex: 'id', width: 90 },
-  { title: '会员姓名', dataIndex: 'memberName' },
-  { title: '电脑编号', dataIndex: 'computerNo' },
-  { title: '预约时间', slotName: 'reserveTime' },
-  { title: '状态', slotName: 'status' },
-  { title: '创建时间', slotName: 'createTime' },
+  { title: '会员姓名', dataIndex: 'memberName', width: 120 },
+  { title: '电脑编号', dataIndex: 'computerNo', width: 120 },
+  { title: '预约时间', slotName: 'reserveTime', width: 190 },
+  { title: '状态', slotName: 'status', width: 100 },
+  { title: '创建时间', slotName: 'createTime', width: 190 },
   { title: '操作', slotName: 'actions', width: 190 }
 ]
 

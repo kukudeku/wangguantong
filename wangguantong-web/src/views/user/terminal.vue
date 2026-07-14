@@ -10,7 +10,7 @@
       </div>
 
       <nav class="wt-nav" aria-label="用户端功能导航">
-        <button :class="{ active: activeTab === 'seat' }" @click="activeTab = 'seat'">
+        <button :class="{ active: activeTab === 'seat' }" @click="openPrimaryPage('seat')">
           <IconDesktop />
           <span>座位上机</span>
         </button>
@@ -20,7 +20,7 @@
             class="wt-nav-parent"
             :class="{ 'child-active': isFoodPage }"
             :aria-expanded="foodMenuExpanded"
-            @click="foodMenuExpanded = !foodMenuExpanded"
+            @click="toggleFoodMenu"
           >
             <IconApps />
             <span>自助点餐</span>
@@ -30,26 +30,47 @@
             </span>
           </button>
           <div v-show="foodMenuExpanded" class="wt-subnav">
-            <button type="button" :class="{ active: activeTab === 'food' }" @click="openFoodProducts">
+            <button type="button" :class="{ active: activeTab === 'food' }" :aria-current="activeTab === 'food' ? 'page' : undefined" @click="openFoodProducts">
+              <IconApps />
               <span>商品点餐</span>
             </button>
-            <button type="button" :class="{ active: activeTab === 'food-order' }" @click="openFoodOrders">
+            <button type="button" :class="{ active: activeTab === 'food-order' }" :aria-current="activeTab === 'food-order' ? 'page' : undefined" @click="openFoodOrders">
+              <IconHistory />
               <span>订单记录</span>
             </button>
           </div>
         </div>
-        <button :class="{ active: activeTab === 'coupon' }" @click="activeTab = 'coupon'">
+        <button :class="{ active: activeTab === 'coupon' }" @click="openPrimaryPage('coupon')">
           <IconGift />
           <span>签到领券</span>
         </button>
-        <button :class="{ active: activeTab === 'promotion' }" @click="activeTab = 'promotion'">
+        <button :class="{ active: activeTab === 'promotion' }" @click="openPrimaryPage('promotion')">
           <IconUserAdd />
           <span>推广计划</span>
         </button>
-        <button :class="{ active: activeTab === 'balance' }" @click="activeTab = 'balance'">
-          <IconList />
-          <span>余额</span>
-        </button>
+        <div class="wt-nav-group" :class="{ expanded: balanceMenuExpanded }">
+          <button
+            type="button"
+            class="wt-nav-parent"
+            :class="{ 'child-active': isBalancePage }"
+            :aria-expanded="balanceMenuExpanded"
+            @click="toggleBalanceMenu"
+          >
+            <IconList />
+            <span>账户服务</span>
+            <span class="wt-nav-meta"><IconDown class="wt-nav-arrow" /></span>
+          </button>
+          <div v-show="balanceMenuExpanded" class="wt-subnav">
+            <button type="button" :class="{ active: activeTab === 'balance' }" :aria-current="activeTab === 'balance' ? 'page' : undefined" @click="openBalancePage">
+              <IconSafe />
+              <span>余额账户</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'voucher' }" :aria-current="activeTab === 'voucher' ? 'page' : undefined" @click="openVoucherPage">
+              <IconScan />
+              <span>团购验券</span>
+            </button>
+          </div>
+        </div>
       </nav>
 
       <div class="wt-sidebar-account">
@@ -615,6 +636,43 @@
           </a-table>
 
         </section>
+
+        <section v-if="activeTab === 'voucher'" class="wt-surface wt-voucher-surface">
+          <div class="wt-section-head">
+            <div>
+              <h2>团购验券</h2>
+              <p>核销后台已录入的有效券码</p>
+            </div>
+            <a-button @click="loadUserRecords">刷新余额</a-button>
+          </div>
+
+          <div class="wt-voucher-body">
+            <form class="wt-voucher-form" @submit.prevent="submitVoucherRecharge">
+              <label for="voucher-code">团购券码</label>
+              <a-input
+                id="voucher-code"
+                v-model="voucherForm.voucherCode"
+                allow-clear
+                size="large"
+                placeholder="请输入团购券码"
+              >
+                <template #prefix><IconScan /></template>
+              </a-input>
+              <a-button type="primary" html-type="submit" size="large" :loading="voucherSubmitting">
+                核销并充值
+              </a-button>
+            </form>
+
+            <aside class="wt-voucher-account" aria-label="核销账户">
+              <span>当前余额</span>
+              <strong>￥{{ money(currentMember?.balance) }}</strong>
+              <dl>
+                <div><dt>核销账户</dt><dd>{{ currentMember?.name || '-' }}</dd></div>
+                <div><dt>会员级别</dt><dd>{{ currentMember?.memberLevel || '-' }}</dd></div>
+              </dl>
+            </aside>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -723,7 +781,7 @@
       v-model:visible="rechargeVisible"
       title="余额充值"
       width="min(520px, calc(100vw - 24px))"
-      :ok-text="rechargeMode === 'voucher' ? '核销并充值' : '确认充值'"
+      ok-text="确认充值"
       cancel-text="取消"
       :ok-loading="rechargeSubmitting"
       :on-before-ok="submitRecharge"
@@ -733,11 +791,7 @@
           <span>当前余额</span>
           <strong>￥{{ money(currentMember?.balance) }}</strong>
         </div>
-        <div class="wt-recharge-tabs">
-          <button type="button" :class="{ active: rechargeMode === 'amount' }" @click="rechargeMode = 'amount'">余额充值</button>
-          <button type="button" :class="{ active: rechargeMode === 'voucher' }" @click="rechargeMode = 'voucher'">团购验券</button>
-        </div>
-        <div v-if="rechargeMode === 'amount'" class="wt-recharge-field">
+        <div class="wt-recharge-field">
           <label>选择充值金额</label>
           <div class="wt-recharge-options">
             <button
@@ -751,7 +805,7 @@
             </button>
           </div>
         </div>
-        <div v-if="rechargeMode === 'amount'" class="wt-recharge-field">
+        <div class="wt-recharge-field">
           <label>自定义金额</label>
           <a-input-number
             v-model="rechargeForm.amount"
@@ -763,11 +817,6 @@
           >
             <template #prefix>￥</template>
           </a-input-number>
-        </div>
-        <div v-else class="wt-recharge-field">
-          <label>团购券码</label>
-          <a-input v-model="rechargeForm.voucherCode" allow-clear placeholder="请输入后台已录入的团购券码" />
-          <p class="wt-recharge-help">仅支持后台已录入且未核销的券码，金额以后台设置为准。</p>
         </div>
       </div>
     </a-modal>
@@ -786,11 +835,14 @@ import {
   IconDown,
   IconExclamationCircleFill,
   IconGift,
+  IconHistory,
   IconInfoCircle,
   IconList,
   IconMinus,
   IconPlus,
   IconPoweroff,
+  IconSafe,
+  IconScan,
   IconSettings,
   IconSwap,
   IconTool,
@@ -819,7 +871,8 @@ const route = useRoute()
 const router = useRouter()
 const activeTab = ref('seat')
 const recordTab = ref('balance')
-const foodMenuExpanded = ref(true)
+const foodMenuExpanded = ref(false)
+const balanceMenuExpanded = ref(false)
 const selectedFoodCategory = ref('全部')
 const currentMember = ref(getStoredUser())
 const computers = ref([])
@@ -856,11 +909,12 @@ const paymentDialog = reactive({
 })
 const rechargeSubmitting = ref(false)
 const rechargeSubmitted = ref(false)
-const rechargeMode = ref('amount')
+const voucherSubmitting = ref(false)
 const selectedComputer = ref(null)
 const reservationForm = reactive({ reserveTime: '' })
 const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
-const rechargeForm = reactive({ amount: 50, voucherCode: '' })
+const rechargeForm = reactive({ amount: 50 })
+const voucherForm = reactive({ voucherCode: '' })
 const changeComputerForm = reactive({ targetComputerId: null })
 const repairForm = reactive({ problemDescription: '' })
 const rechargeOptions = [20, 50, 100, 200]
@@ -920,13 +974,15 @@ const discountText = computed(() => {
 })
 
 const isFoodPage = computed(() => activeTab.value === 'food' || activeTab.value === 'food-order')
+const isBalancePage = computed(() => activeTab.value === 'balance' || activeTab.value === 'voucher')
 
 const pageTitle = computed(() => {
   if (activeTab.value === 'food') return '自助点餐'
   if (activeTab.value === 'food-order') return '订单记录'
   if (activeTab.value === 'coupon') return '签到领券'
   if (activeTab.value === 'promotion') return '推广计划'
-  if (activeTab.value === 'balance') return '余额'
+  if (activeTab.value === 'balance') return '余额账户'
+  if (activeTab.value === 'voucher') return '团购验券'
   return '座位与上机'
 })
 
@@ -936,6 +992,7 @@ const pageSubtitle = computed(() => {
   if (activeTab.value === 'coupon') return '每日签到，连续天数越多奖励越高'
   if (activeTab.value === 'promotion') return '邀请好友注册，双方领取余额奖励'
   if (activeTab.value === 'balance') return '充值余额并查看账户明细'
+  if (activeTab.value === 'voucher') return '核销有效团购券，金额自动充入余额'
   if (currentRunningRecord.value) return '当前已有电脑正在使用，可在本页自助下机'
   return '选择空闲电脑，自助上机或预约'
 })
@@ -1179,13 +1236,46 @@ function logout() {
 
 function openFoodProducts() {
   foodMenuExpanded.value = true
+  balanceMenuExpanded.value = false
   activeTab.value = 'food'
 }
 
 function openFoodOrders() {
   foodMenuExpanded.value = true
+  balanceMenuExpanded.value = false
   activeTab.value = 'food-order'
   loadUserRecords()
+}
+
+function toggleFoodMenu() {
+  foodMenuExpanded.value = !foodMenuExpanded.value
+  if (foodMenuExpanded.value) balanceMenuExpanded.value = false
+}
+
+function toggleBalanceMenu() {
+  balanceMenuExpanded.value = !balanceMenuExpanded.value
+  if (balanceMenuExpanded.value) foodMenuExpanded.value = false
+}
+
+function openPrimaryPage(tab) {
+  activeTab.value = tab
+  foodMenuExpanded.value = false
+  balanceMenuExpanded.value = false
+}
+
+function openBalancePage() {
+  balanceMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  activeTab.value = 'balance'
+  loadUserRecords()
+}
+
+function openVoucherPage() {
+  balanceMenuExpanded.value = true
+  foodMenuExpanded.value = false
+  activeTab.value = 'voucher'
+  voucherForm.voucherCode = ''
+  refreshCurrentMember()
 }
 
 function openPasswordModal() {
@@ -1195,16 +1285,11 @@ function openPasswordModal() {
 
 function openRechargeModal() {
   rechargeForm.amount = 50
-  rechargeForm.voucherCode = ''
-  rechargeMode.value = 'amount'
   rechargeSubmitted.value = false
   rechargeVisible.value = true
 }
 
 async function submitRecharge() {
-  if (rechargeMode.value === 'voucher') {
-    return submitVoucherRecharge()
-  }
   const amount = Number(rechargeForm.amount)
   if (!Number.isFinite(amount) || amount <= 0) {
     Message.error('充值金额必须大于 0')
@@ -1233,25 +1318,24 @@ async function submitRecharge() {
 }
 
 async function submitVoucherRecharge() {
-  const voucherCode = rechargeForm.voucherCode.trim()
+  const voucherCode = voucherForm.voucherCode.trim()
   if (!voucherCode) {
     Message.error('请输入团购券码')
     return false
   }
-  if (rechargeSubmitting.value || rechargeSubmitted.value) return false
-  rechargeSubmitting.value = true
-  rechargeSubmitted.value = true
+  if (voucherSubmitting.value) return false
+  voucherSubmitting.value = true
   try {
     await redeemVoucher({ memberId: String(currentMember.value.id), voucherCode })
     await refreshCurrentMember()
     await loadUserRecords()
+    voucherForm.voucherCode = ''
     Message.success('验券成功，余额已到账')
     return true
   } catch (error) {
-    rechargeSubmitted.value = false
     return false
   } finally {
-    rechargeSubmitting.value = false
+    voucherSubmitting.value = false
   }
 }
 
@@ -1403,6 +1487,7 @@ function showPaymentSuccess(payment = {}) {
     status: '已支付'
   })
   foodMenuExpanded.value = true
+  balanceMenuExpanded.value = false
   activeTab.value = 'food-order'
 }
 

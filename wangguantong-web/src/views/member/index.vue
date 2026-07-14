@@ -17,7 +17,7 @@
       </a-space>
     </a-form>
 
-    <a-table class="no-wrap-table" :columns="columns" :data="tableData" row-key="id" :pagination="false" :scroll="{ x: 1280 }">
+    <a-table class="no-wrap-table" :columns="columns" :data="tableData" row-key="id" :pagination="false" :scroll="{ x: 1390 }">
       <template #status="{ record }">
         <a-tag :color="record.status === '正常' ? 'green' : 'red'">{{ record.status }}</a-tag>
       </template>
@@ -120,14 +120,14 @@ const rechargeForm = reactive({
 
 const columns = [
   { title: '会员ID', dataIndex: 'id', width: 90 },
-  { title: '会员姓名', dataIndex: 'name' },
-  { title: '身份证号', dataIndex: 'idCard', width: 170 },
-  { title: '手机号', dataIndex: 'phone' },
-  { title: '余额', dataIndex: 'balance' },
-  { title: '用户类型', dataIndex: 'userType' },
-  { title: '会员级别', dataIndex: 'memberLevel' },
-  { title: '状态', slotName: 'status' },
-  { title: '注册时间', slotName: 'createTime' },
+  { title: '会员姓名', dataIndex: 'name', width: 120 },
+  { title: '身份证号', dataIndex: 'idCard', width: 180 },
+  { title: '手机号', dataIndex: 'phone', width: 140 },
+  { title: '余额', dataIndex: 'balance', width: 100 },
+  { title: '用户类型', dataIndex: 'userType', width: 100 },
+  { title: '会员级别', dataIndex: 'memberLevel', width: 120 },
+  { title: '状态', slotName: 'status', width: 90 },
+  { title: '注册时间', slotName: 'createTime', width: 190 },
   { title: '操作', slotName: 'actions', width: 260 }
 ]
 
