@@ -373,10 +373,6 @@
                 </div>
               </div>
               <div class="wt-running-actions">
-                <a-button @click="openChangeComputerModal">
-                  <template #icon><IconSwap /></template>
-                  换机
-                </a-button>
                 <a-button status="warning" @click="openRepairModal">
                   <template #icon><IconTool /></template>
                   机器报修
@@ -467,7 +463,7 @@
           <div class="wt-record-toolbar">
             <div>
               <h2>上机记录</h2>
-              <p>查看历史上机、换机与扣费记录</p>
+              <p>查看历史上机与扣费记录</p>
             </div>
             <a-button @click="loadUserRecords">刷新</a-button>
           </div>
@@ -477,15 +473,8 @@
             :data="onlineHistoryRecords"
             row-key="id"
             :pagination="false"
-            :scroll="{ x: 1230 }"
+            :scroll="{ x: 980 }"
           >
-            <template #computerHistory="{ record }">
-              <div v-if="hasChangedComputer(record)" class="wt-change-record">
-                <a-tag color="orange">已换机</a-tag>
-                <span>{{ formatComputerHistory(record.computerHistory) }}</span>
-              </div>
-              <span v-else>未换机</span>
-            </template>
             <template #startTime="{ record }">{{ formatDateTime(record.startTime) }}</template>
             <template #endTime="{ record }">{{ formatDateTime(record.endTime) }}</template>
             <template #status="{ record }"><a-tag color="green">{{ record.status }}</a-tag></template>
@@ -997,22 +986,6 @@
       </a-form>
     </a-modal>
 
-    <a-modal v-model:visible="changeComputerVisible" title="更换电脑" :on-before-ok="submitChangeComputer">
-      <a-form :model="changeComputerForm" layout="vertical">
-        <a-form-item label="当前电脑">
-          <a-input :model-value="currentRunningRecord?.computerNo" disabled />
-        </a-form-item>
-        <a-form-item label="目标电脑" required>
-          <a-select v-model="changeComputerForm.targetComputerId" placeholder="请选择空闲电脑">
-            <a-option v-for="computer in freeComputers" :key="computer.id" :value="computer.id">
-              {{ computer.computerNo }}（{{ computer.area }}，￥{{ money(computer.pricePerHour) }}/小时，{{ changeFeeText(computer) }}）
-            </a-option>
-          </a-select>
-        </a-form-item>
-        <div class="wt-dialog-notice">{{ selectedChangeFeeText }}</div>
-      </a-form>
-    </a-modal>
-
     <a-modal v-model:visible="repairVisible" title="机器报修" :on-before-ok="submitRepair">
       <a-form :model="repairForm" layout="vertical">
         <a-form-item label="报修电脑">
@@ -1026,7 +999,7 @@
             placeholder="请描述键盘、鼠标、显示器或系统故障"
           />
         </a-form-item>
-        <div class="wt-dialog-notice">提交后管理员会处理。如需立即换机，请先提交报修再使用换机功能。</div>
+        <div class="wt-dialog-notice">提交后管理员会尽快处理，故障期间可联系前台协助。</div>
       </a-form>
     </a-modal>
 
@@ -1145,7 +1118,6 @@ import {
   IconSafe,
   IconScan,
   IconSettings,
-  IconSwap,
   IconTool,
   IconUserAdd
 } from '@arco-design/web-vue/es/icon'
@@ -1159,7 +1131,7 @@ import {
 } from '../../api/food'
 import { getSignInStatus, getUserCoupons, userSignIn } from '../../api/coupon'
 import { getMemberList } from '../../api/member'
-import { changeOnlineComputer, endOnline, startOnline } from '../../api/online'
+import { endOnline, startOnline } from '../../api/online'
 import { addRecharge } from '../../api/recharge'
 import { getRepairList, reportRepair } from '../../api/repair'
 import { getPromotionOverview } from '../../api/promotion'
@@ -1200,7 +1172,6 @@ const now = ref(new Date())
 const reservationVisible = ref(false)
 const passwordVisible = ref(false)
 const rechargeVisible = ref(false)
-const changeComputerVisible = ref(false)
 const repairVisible = ref(false)
 const paymentSubmitting = ref(false)
 const paymentChecking = ref(false)
@@ -1220,7 +1191,6 @@ const reservationForm = reactive({ reserveTime: '' })
 const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
 const rechargeForm = reactive({ amount: 50 })
 const voucherForm = reactive({ voucherCode: '' })
-const changeComputerForm = reactive({ targetComputerId: null })
 const repairForm = reactive({ problemDescription: '' })
 const serviceCallForm = reactive({ requestCategory: '设备协助', location: '', description: '' })
 const serviceRepairForm = reactive({ computerId: null, faultCategory: '电脑故障', description: '' })
@@ -1238,7 +1208,6 @@ const balanceColumns = [
 
 const onlineColumns = [
   { title: '电脑编号', dataIndex: 'computerNo', width: 120 },
-  { title: '换机记录', slotName: 'computerHistory', width: 250 },
   { title: '开始时间', slotName: 'startTime', width: 190 },
   { title: '下机时间', slotName: 'endTime', width: 190 },
   { title: '已扣金额', dataIndex: 'totalAmount', width: 120 },
@@ -1327,9 +1296,9 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (activeTab.value === 'seat') return '查看电脑状态并选择空闲机位'
-  if (activeTab.value === 'current-online') return '查看实时计费信息并进行换机或下机'
+  if (activeTab.value === 'current-online') return '查看实时计费信息并进行下机操作'
   if (activeTab.value === 'reservation-list') return '管理预约并在保留时间内上机'
-  if (activeTab.value === 'online-history') return '查看历史上机、换机与扣费记录'
+  if (activeTab.value === 'online-history') return '查看历史上机与扣费记录'
   if (activeTab.value === 'food') return '选择商品，确认清单后下单'
   if (activeTab.value === 'food-order') return '查看点餐订单、支付状态和处理进度'
   if (activeTab.value === 'coupon') return '每日签到，连续天数越多奖励越高'
@@ -1352,15 +1321,6 @@ const ownReservationMap = computed(() => new Map(reservations.value
   .map((item) => [item.computerId, item])))
 const activeComputer = computed(() => computers.value.find((item) => item.id === currentRunningRecord.value?.computerId))
 const selectedServiceComputer = computed(() => computers.value.find((item) => item.id === serviceRepairForm.computerId))
-const freeComputers = computed(() => computers.value.filter((item) => item.status === '空闲'))
-const selectedChangeComputer = computed(() => computers.value.find((item) => item.id === changeComputerForm.targetComputerId))
-const selectedChangeFeeText = computed(() => {
-  if (!selectedChangeComputer.value) return '目标机价格更高时只补小时差价，同价或更低时免费换机且不退差价。'
-  const extraAmount = getChangeExtraAmount(selectedChangeComputer.value)
-  return extraAmount > 0
-    ? `本次换机需补差价 ￥${money(extraAmount)}，确认后从余额扣除。`
-    : '本次免费换机，不额外扣费；已产生的费用不退还。'
-})
 const groupedFoodItems = computed(() => {
   const map = new Map()
   foodItems.value.forEach((item) => {
@@ -1472,25 +1432,6 @@ function seatClass(status) {
   if (status === '使用中') return 'is-using'
   if (status === '预约锁定') return 'is-reserved'
   return 'is-repair'
-}
-
-function getChangeExtraAmount(targetComputer) {
-  const currentPrice = Number(activeComputer.value?.pricePerHour || 0)
-  const targetPrice = Number(targetComputer?.pricePerHour || 0)
-  return Math.max(0, (targetPrice - currentPrice) * discountRate.value)
-}
-
-function changeFeeText(targetComputer) {
-  const extraAmount = getChangeExtraAmount(targetComputer)
-  return extraAmount > 0 ? `补 ￥${money(extraAmount)}` : '免费换机'
-}
-
-function hasChangedComputer(record) {
-  return String(record?.computerHistory || '').includes('->')
-}
-
-function formatComputerHistory(history) {
-  return String(history || '-').replaceAll('->', '→')
 }
 
 function getFoodCategory(item) {
@@ -2237,34 +2178,6 @@ async function submitEndOnline() {
   await refreshCurrentMember()
   await loadData()
   openMachineHall()
-}
-
-function openChangeComputerModal() {
-  if (!currentRunningRecord.value) {
-    Message.error('当前没有进行中的上机记录')
-    return
-  }
-  if (freeComputers.value.length === 0) {
-    Message.warning('当前没有可更换的空闲电脑')
-    return
-  }
-  changeComputerForm.targetComputerId = null
-  changeComputerVisible.value = true
-}
-
-async function submitChangeComputer() {
-  if (!changeComputerForm.targetComputerId) {
-    Message.error('请选择目标电脑')
-    return false
-  }
-  const result = await changeOnlineComputer({
-    recordId: currentRunningRecord.value.id,
-    targetComputerId: changeComputerForm.targetComputerId
-  })
-  Message.success(result?.message || '换机成功')
-  await refreshCurrentMember()
-  await loadData()
-  return true
 }
 
 function openRepairModal() {

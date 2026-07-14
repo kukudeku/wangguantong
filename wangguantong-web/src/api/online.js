@@ -8,10 +8,6 @@ export function endOnline(recordId) {
   return request.post(`/online/end/${recordId}`)
 }
 
-export function changeOnlineComputer(data) {
-  return request.post('/online/change-computer', data)
-}
-
 export function getOnlineList(params) {
   return request.get('/online/list', { params })
 }

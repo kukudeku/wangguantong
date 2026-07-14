@@ -16,3 +16,17 @@ secrets/
 
 # macOS 文件
 .DS_Store
+
+# Maven
+target/
+
+# IDEA
+.idea/
+*.iml
+
+# Node
+node_modules/
+dist/
+
+# Logs
+*.log

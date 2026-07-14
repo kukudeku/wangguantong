@@ -1,9 +1,7 @@
 package com.chinasofti.wangguantong.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.chinasofti.wangguantong.dto.ChangeComputerResult;
 import com.chinasofti.wangguantong.entity.Computer;
 import com.chinasofti.wangguantong.entity.Member;
 import com.chinasofti.wangguantong.entity.OnlineRecord;
@@ -126,90 +124,6 @@ public class OnlineRecordServiceImpl extends ServiceImpl<OnlineRecordMapper, Onl
 
         computer.setStatus("空闲");
         computerService.updateById(computer);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public ChangeComputerResult changeComputer(Long recordId, Long targetComputerId) {
-        if (recordId == null || targetComputerId == null) {
-            throw new RuntimeException("请选择上机记录和目标电脑");
-        }
-        OnlineRecord record = getById(recordId);
-        if (record == null || !"进行中".equals(record.getStatus())) {
-            throw new RuntimeException("当前上机记录不存在或已结束");
-        }
-        if (targetComputerId.equals(record.getComputerId())) {
-            throw new RuntimeException("目标电脑不能与当前电脑相同");
-        }
-        Member member = memberService.getById(record.getMemberId());
-        Computer currentComputer = computerService.getById(record.getComputerId());
-        Computer targetComputer = computerService.getById(targetComputerId);
-        if (member == null || currentComputer == null) {
-            throw new RuntimeException("当前上机信息不完整");
-        }
-        if (targetComputer == null || !"空闲".equals(targetComputer.getStatus())) {
-            throw new RuntimeException("目标电脑不是空闲状态");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        settleRunningCharge(record, member, currentComputer, now);
-        if (!"进行中".equals(record.getStatus())) {
-            return changeResult(false, BigDecimal.ZERO, currentComputer, targetComputer,
-                    "余额不足，系统已自动下机");
-        }
-
-        BigDecimal currentHourlyAmount = calculateAmount(currentComputer.getPricePerHour(), 1, member);
-        BigDecimal targetHourlyAmount = calculateAmount(targetComputer.getPricePerHour(), 1, member);
-        BigDecimal extraAmount = targetHourlyAmount.subtract(currentHourlyAmount).max(BigDecimal.ZERO);
-        if (member.getBalance().compareTo(extraAmount) < 0) {
-            return changeResult(false, extraAmount, currentComputer, targetComputer,
-                    "余额不足以支付换机差价 " + extraAmount + " 元");
-        }
-        boolean targetClaimed = computerService.update(new LambdaUpdateWrapper<Computer>()
-                .eq(Computer::getId, targetComputer.getId())
-                .eq(Computer::getStatus, "空闲")
-                .set(Computer::getStatus, "使用中"));
-        if (!targetClaimed) {
-            throw new RuntimeException("目标电脑已被占用，请选择其他电脑");
-        }
-
-        if (extraAmount.compareTo(BigDecimal.ZERO) > 0) {
-            member.setBalance(member.getBalance().subtract(extraAmount));
-            memberService.updateById(member);
-        }
-
-        String history = record.getComputerHistory();
-        if (history == null || history.trim().isEmpty()) {
-            history = currentComputer.getComputerNo();
-        }
-        record.setComputerHistory(history + " -> " + targetComputer.getComputerNo());
-        record.setComputerId(targetComputer.getId());
-        record.setComputerNo(targetComputer.getComputerNo());
-        record.setSegmentStartTime(now);
-        record.setSegmentPaidAmount(targetHourlyAmount);
-        record.setTotalAmount(defaultAmount(record.getTotalAmount()).add(extraAmount));
-        updateById(record);
-
-        currentComputer.setStatus("空闲");
-        computerService.updateById(currentComputer);
-        String message = extraAmount.compareTo(BigDecimal.ZERO) > 0
-                ? "换机成功，已补差价 " + extraAmount + " 元"
-                : "换机成功，本次免费换机";
-        return changeResult(true, extraAmount, currentComputer, targetComputer, message);
-    }
-
-    private ChangeComputerResult changeResult(boolean changed,
-                                               BigDecimal extraAmount,
-                                               Computer sourceComputer,
-                                               Computer targetComputer,
-                                               String message) {
-        ChangeComputerResult result = new ChangeComputerResult();
-        result.setChanged(changed);
-        result.setExtraAmount(extraAmount);
-        result.setSourceComputerNo(sourceComputer == null ? null : sourceComputer.getComputerNo());
-        result.setTargetComputerNo(targetComputer == null ? null : targetComputer.getComputerNo());
-        result.setMessage(message);
-        return result;
     }
 
     @Override

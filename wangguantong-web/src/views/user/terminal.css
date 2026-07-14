@@ -2033,13 +2033,6 @@
   font-weight: 700;
 }
 
-.wt-change-record {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  white-space: nowrap;
-}
-
 .wt-form-tip {
   margin-top: 6px;
   color: var(--wt-muted);
