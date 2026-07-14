@@ -9,8 +9,6 @@ public interface PromotionService {
 
     Member register(Member member);
 
-    Member ensureInviteCode(Member member);
-
     Map<String, Object> getUserOverview(Long memberId);
 
     Map<String, Object> getAdminOverview();

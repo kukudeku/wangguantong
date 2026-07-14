@@ -355,8 +355,7 @@
 .wt-record-toolbar p,
 .wt-food-copy p,
 .wt-notice p,
-.wt-running-machine p,
-.wt-cart-summary p {
+.wt-running-machine p {
   margin: 0;
 }
 
@@ -1649,13 +1648,6 @@
 .wt-cart-summary .total strong {
   color: #bd2c2c;
   font-size: 22px;
-}
-
-.wt-cart-summary p {
-  margin-top: 8px;
-  color: var(--wt-subtle);
-  font-size: 10px;
-  text-align: center;
 }
 
 .wt-empty {

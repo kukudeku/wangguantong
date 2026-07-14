@@ -385,7 +385,6 @@
               </div>
               <div class="total"><span>应付合计</span><strong>￥{{ cartPayable }}</strong></div>
               <a-button type="primary" long :loading="paymentSubmitting" :disabled="cartItems.length === 0" @click="submitCartOrder">下单</a-button>
-              <p>{{ paymentHint }}</p>
             </div>
           </aside>
         </section>
@@ -985,11 +984,6 @@ const selectedCoupon = computed(() => eligibleCoupons.value.find((coupon) => cou
 const cartDiscount = computed(() => selectedCoupon.value
   ? Math.min(Number(selectedCoupon.value.discountAmount || 0), Number(cartTotal.value)).toFixed(2) : '0.00')
 const cartPayable = computed(() => Math.max(0, Number(cartTotal.value) - Number(cartDiscount.value)).toFixed(2))
-const paymentHint = computed(() => paymentMethod.value === '余额支付'
-  ? '费用将从会员余额中扣除'
-  : paymentMethod.value === '微信支付'
-    ? '下单后使用微信扫码完成真实支付'
-    : '下单后将打开支付宝电脑网站收银台')
 const paymentQrCodeUrl = computed(() => paymentDialog.outTradeNo
   ? getWechatPaymentQrCodeUrl(paymentDialog.outTradeNo) : '')
 const availableCouponCount = computed(() => userCoupons.value.filter((coupon) => coupon.status === '可使用').length)

@@ -73,11 +73,9 @@ public class PromotionServiceImpl implements PromotionService {
         member.setUserType("会员");
         member.setMemberLevel("普通会员");
         member.setStatus("正常");
-        member.setInviteCode(null);
         member.setInviterMemberId(inviter == null ? null : inviter.getId());
         member.setCreateTime(LocalDateTime.now());
-        memberService.save(member);
-        ensureInviteCode(member);
+        memberService.saveNewMember(member);
 
         if (inviter != null) {
             grantInvitationReward(inviter, member, invitationCode, rule);
@@ -86,25 +84,12 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Member ensureInviteCode(Member member) {
-        if (member == null || member.getId() == null) {
-            throw new RuntimeException("用户信息不正确");
-        }
-        if (!StringUtils.hasText(member.getInviteCode())) {
-            member.setInviteCode(createInviteCode(member.getId()));
-            memberService.updateById(member);
-        }
-        return member;
-    }
-
-    @Override
     public Map<String, Object> getUserOverview(Long memberId) {
         Member member = memberService.getById(memberId);
         if (member == null) {
             throw new RuntimeException("用户不存在");
         }
-        ensureInviteCode(member);
+        memberService.ensureInviteCode(member);
         PromotionRule rule = getOrCreateRule();
         List<InvitationRecord> records = listRecords(memberId);
 
@@ -235,10 +220,6 @@ public class PromotionServiceImpl implements PromotionService {
         return invitationRecordMapper.selectList(new LambdaQueryWrapper<InvitationRecord>()
                 .eq(InvitationRecord::getInviterMemberId, memberId)
                 .orderByDesc(InvitationRecord::getId));
-    }
-
-    private String createInviteCode(Long memberId) {
-        return "WG" + String.format("%06d", memberId);
     }
 
     private String normalizeInviteCode(String inviteCode) {
