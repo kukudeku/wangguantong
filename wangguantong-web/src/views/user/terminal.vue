@@ -14,11 +14,30 @@
           <IconDesktop />
           <span>座位上机</span>
         </button>
-        <button :class="{ active: activeTab === 'food' }" @click="activeTab = 'food'">
-          <IconApps />
-          <span>自助点餐</span>
-          <em v-if="cartItemCount">{{ cartItemCount }}</em>
-        </button>
+        <div class="wt-nav-group" :class="{ expanded: foodMenuExpanded }">
+          <button
+            type="button"
+            class="wt-nav-parent"
+            :class="{ 'child-active': isFoodPage }"
+            :aria-expanded="foodMenuExpanded"
+            @click="foodMenuExpanded = !foodMenuExpanded"
+          >
+            <IconApps />
+            <span>自助点餐</span>
+            <span class="wt-nav-meta">
+              <em v-if="cartItemCount">{{ cartItemCount }}</em>
+              <IconDown class="wt-nav-arrow" />
+            </span>
+          </button>
+          <div v-show="foodMenuExpanded" class="wt-subnav">
+            <button type="button" :class="{ active: activeTab === 'food' }" @click="openFoodProducts">
+              <span>商品点餐</span>
+            </button>
+            <button type="button" :class="{ active: activeTab === 'food-order' }" @click="openFoodOrders">
+              <span>订单记录</span>
+            </button>
+          </div>
+        </div>
         <button :class="{ active: activeTab === 'coupon' }" @click="activeTab = 'coupon'">
           <IconGift />
           <span>签到领券</span>
@@ -228,7 +247,7 @@
                 <h2>快速点餐</h2>
                 <p>商品送至当前机位</p>
               </div>
-              <button class="wt-text-button" @click="activeTab = 'food'">查看全部</button>
+              <button class="wt-text-button" @click="openFoodProducts">查看全部</button>
             </div>
             <div v-if="foodItems.length === 0" class="wt-empty">暂无可售商品</div>
             <div v-else class="wt-quick-food-list">
@@ -251,7 +270,7 @@
                 <span>购物车 · {{ cartItemCount }} 件</span>
                 <strong>￥{{ cartTotal }}</strong>
               </div>
-              <a-button type="primary" :disabled="cartItems.length === 0" @click="activeTab = 'food'">去结算</a-button>
+              <a-button type="primary" :disabled="cartItems.length === 0" @click="openFoodProducts">去结算</a-button>
             </div>
           </aside>
 
@@ -369,6 +388,43 @@
               <p>{{ paymentHint }}</p>
             </div>
           </aside>
+        </section>
+
+        <section v-if="activeTab === 'food-order'" class="wt-surface wt-record-surface">
+          <div class="wt-record-toolbar wt-order-toolbar">
+            <div>
+              <h2>订单记录</h2>
+              <p>查看点餐订单、支付状态和处理进度</p>
+            </div>
+            <a-button @click="loadUserRecords">刷新</a-button>
+          </div>
+
+          <a-table
+            class="no-wrap-table wt-record-table"
+            :columns="orderColumns"
+            :data="orders"
+            row-key="id"
+            :pagination="false"
+            :scroll="{ x: 1480 }"
+          >
+            <template #createTime="{ record }">{{ formatDateTime(record.createTime) }}</template>
+            <template #status="{ record }">
+              <a-tag :color="orderStatusColor(record.status)">{{ record.status }}</a-tag>
+            </template>
+            <template #paymentStatus="{ record }">
+              <a-tag :color="paymentStatusColor(record.paymentStatus)">{{ record.paymentStatus || '已支付' }}</a-tag>
+            </template>
+            <template #coupon="{ record }">{{ record.couponName || '-' }}</template>
+            <template #orderActions="{ record }">
+              <a-button
+                v-if="record.status === '待支付' && record.paymentOutTradeNo"
+                type="primary"
+                size="small"
+                @click="resumePayment(record)"
+              >继续支付</a-button>
+              <span v-else>-</span>
+            </template>
+          </a-table>
         </section>
 
         <section v-if="activeTab === 'coupon'" class="wt-coupon-layout">
@@ -516,7 +572,6 @@
             <div class="wt-record-tabs">
               <button :class="{ active: recordTab === 'balance' }" @click="recordTab = 'balance'">余额明细</button>
               <button :class="{ active: recordTab === 'online' }" @click="recordTab = 'online'">上机记录</button>
-              <button :class="{ active: recordTab === 'order' }" @click="recordTab = 'order'">订单记录</button>
             </div>
           </div>
 
@@ -560,33 +615,6 @@
             </template>
           </a-table>
 
-          <a-table
-            v-if="recordTab === 'order'"
-            class="no-wrap-table wt-record-table"
-            :columns="orderColumns"
-            :data="orders"
-            row-key="id"
-            :pagination="false"
-            :scroll="{ x: 1480 }"
-          >
-            <template #createTime="{ record }">{{ formatDateTime(record.createTime) }}</template>
-            <template #status="{ record }">
-              <a-tag :color="orderStatusColor(record.status)">{{ record.status }}</a-tag>
-            </template>
-            <template #paymentStatus="{ record }">
-              <a-tag :color="paymentStatusColor(record.paymentStatus)">{{ record.paymentStatus || '已支付' }}</a-tag>
-            </template>
-            <template #coupon="{ record }">{{ record.couponName || '-' }}</template>
-            <template #orderActions="{ record }">
-              <a-button
-                v-if="record.status === '待支付' && record.paymentOutTradeNo"
-                type="primary"
-                size="small"
-                @click="resumePayment(record)"
-              >继续支付</a-button>
-              <span v-else>-</span>
-            </template>
-          </a-table>
         </section>
       </main>
     </div>
@@ -653,9 +681,21 @@
       width="min(440px, calc(100vw - 24px))"
       :footer="false"
       :mask-closable="false"
-      @cancel="stopPaymentPolling"
+      :closable="paymentDialog.status !== '已支付'"
+      :esc-to-close="paymentDialog.status !== '已支付'"
+      @cancel="handlePaymentDialogCancel"
     >
-      <div class="wt-payment-dialog">
+      <div v-if="paymentDialog.status === '已支付'" class="wt-payment-success">
+        <div class="wt-payment-success-icon"><IconCheckCircleFill /></div>
+        <strong>支付成功</strong>
+        <span>订单已提交，可在“自助点餐 - 订单记录”中查看。</span>
+        <div class="wt-payment-success-amount">
+          <span>支付金额</span>
+          <strong>￥{{ money(paymentDialog.amount) }}</strong>
+        </div>
+        <a-button type="primary" long @click="confirmPaymentSuccess">确认</a-button>
+      </div>
+      <div v-else class="wt-payment-dialog">
         <div class="wt-payment-amount">
           <span>待支付金额</span>
           <strong>￥{{ money(paymentDialog.amount) }}</strong>
@@ -737,12 +777,14 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import {
   IconApps,
+  IconCheckCircleFill,
   IconCopy,
   IconDesktop,
+  IconDown,
   IconExclamationCircleFill,
   IconGift,
   IconInfoCircle,
@@ -774,9 +816,11 @@ import { changeUserPassword, getUserBalanceDetail, getUserOnlineRecords, getUser
 import { redeemVoucher } from '../../api/voucher'
 import { formatDateTime } from '../../utils/format'
 
+const route = useRoute()
 const router = useRouter()
 const activeTab = ref('seat')
 const recordTab = ref('balance')
+const foodMenuExpanded = ref(true)
 const selectedFoodCategory = ref('全部')
 const currentMember = ref(getStoredUser())
 const computers = ref([])
@@ -876,8 +920,11 @@ const discountText = computed(() => {
   return '无折扣'
 })
 
+const isFoodPage = computed(() => activeTab.value === 'food' || activeTab.value === 'food-order')
+
 const pageTitle = computed(() => {
   if (activeTab.value === 'food') return '自助点餐'
+  if (activeTab.value === 'food-order') return '订单记录'
   if (activeTab.value === 'coupon') return '签到领券'
   if (activeTab.value === 'promotion') return '推广计划'
   if (activeTab.value === 'balance') return '余额'
@@ -886,6 +933,7 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (activeTab.value === 'food') return '选择商品，确认清单后下单'
+  if (activeTab.value === 'food-order') return '查看点餐订单、支付状态和处理进度'
   if (activeTab.value === 'coupon') return '每日签到，连续天数越多奖励越高'
   if (activeTab.value === 'promotion') return '邀请好友注册，双方领取余额奖励'
   if (activeTab.value === 'balance') return '充值余额并查看账户明细'
@@ -1135,6 +1183,17 @@ function logout() {
   router.push('/user/login')
 }
 
+function openFoodProducts() {
+  foodMenuExpanded.value = true
+  activeTab.value = 'food'
+}
+
+function openFoodOrders() {
+  foodMenuExpanded.value = true
+  activeTab.value = 'food-order'
+  loadUserRecords()
+}
+
 function openPasswordModal() {
   Object.assign(passwordForm, { oldPassword: '', newPassword: '', confirmPassword: '' })
   passwordVisible.value = true
@@ -1268,12 +1327,18 @@ async function submitCartOrder() {
     })
     const discountMessage = Number(cartDiscount.value) > 0 ? `，已优惠 ${cartDiscount.value} 元` : ''
     clearCart()
-    if (selectedMethod === '余额支付' || result.status === '已支付') {
+    if (selectedMethod === '余额支付') {
       if (alipayWindow) alipayWindow.close()
       Message.success(`下单成功${discountMessage}`)
       await refreshCurrentMember()
       await loadUserRecords()
       await loadCouponData()
+      return
+    }
+    if (result.status === '已支付') {
+      if (alipayWindow) alipayWindow.close()
+      showPaymentSuccess(result)
+      await refreshPaymentData()
       return
     }
     openPaymentDialog(result)
@@ -1300,7 +1365,11 @@ function openPaymentDialog(payment) {
     amount: payment.amount,
     status: payment.status || '待支付'
   })
-  startPaymentPolling()
+  if (paymentDialog.status === '已支付') {
+    showPaymentSuccess(payment)
+  } else {
+    startPaymentPolling()
+  }
 }
 
 function resumePayment(order) {
@@ -1329,6 +1398,39 @@ function stopPaymentPolling() {
   paymentPollTimer = null
 }
 
+function showPaymentSuccess(payment = {}) {
+  stopPaymentPolling()
+  Object.assign(paymentDialog, {
+    visible: true,
+    outTradeNo: payment.outTradeNo || paymentDialog.outTradeNo,
+    orderBatchNo: payment.orderBatchNo || paymentDialog.orderBatchNo,
+    paymentMethod: payment.paymentMethod || paymentDialog.paymentMethod || '在线支付',
+    amount: payment.amount ?? paymentDialog.amount,
+    status: '已支付'
+  })
+  foodMenuExpanded.value = true
+  activeTab.value = 'food-order'
+}
+
+function confirmPaymentSuccess() {
+  paymentDialog.visible = false
+  openFoodOrders()
+}
+
+function handlePaymentDialogCancel() {
+  if (paymentDialog.status === '已支付') {
+    paymentDialog.visible = true
+    return
+  }
+  stopPaymentPolling()
+}
+
+async function refreshPaymentData() {
+  await refreshCurrentMember()
+  await loadUserRecords()
+  await loadCouponData()
+}
+
 async function checkPaymentStatus(manual) {
   if (!paymentDialog.outTradeNo || paymentChecking.value) return
   paymentChecking.value = true
@@ -1336,12 +1438,8 @@ async function checkPaymentStatus(manual) {
     const result = await getPaymentStatus(paymentDialog.outTradeNo)
     paymentDialog.status = result.status
     if (result.status === '已支付') {
-      stopPaymentPolling()
-      paymentDialog.visible = false
-      Message.success('支付成功，订单已提交')
-      await refreshCurrentMember()
-      await loadUserRecords()
-      await loadCouponData()
+      showPaymentSuccess(result)
+      await refreshPaymentData()
     } else if (result.status === '已关闭') {
       stopPaymentPolling()
       Message.error('支付单已超时关闭，请重新下单')
@@ -1354,6 +1452,25 @@ async function checkPaymentStatus(manual) {
     stopPaymentPolling()
   } finally {
     paymentChecking.value = false
+  }
+}
+
+async function handleAlipayReturn() {
+  const outTradeNo = String(route.query.out_trade_no || '')
+  const method = String(route.query.method || '')
+  if (!outTradeNo || method !== 'alipay.trade.page.pay.return') return
+
+  try {
+    const result = await getPaymentStatus(outTradeNo)
+    if (result.status === '已支付') {
+      showPaymentSuccess(result)
+      await refreshPaymentData()
+    } else {
+      Message.info('支付宝支付结果正在确认，请稍后在订单记录中查询')
+      openFoodOrders()
+    }
+  } finally {
+    await router.replace('/user')
   }
 }
 
@@ -1537,6 +1654,7 @@ onMounted(() => {
   }
   loadData()
   refreshCurrentMember()
+  handleAlipayReturn()
   timer = window.setInterval(() => {
     now.value = new Date()
   }, 1000)

@@ -177,6 +177,48 @@
   font-style: normal;
 }
 
+.wt-nav-group {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.wt-nav .wt-nav-parent.child-active {
+  color: var(--wt-accent);
+}
+
+.wt-nav-meta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.wt-nav .wt-nav-arrow {
+  font-size: 14px;
+  transition: transform 160ms ease;
+}
+
+.wt-nav-group.expanded .wt-nav-arrow {
+  transform: rotate(180deg);
+}
+
+.wt-subnav {
+  padding: 0 0 2px 31px;
+  display: grid;
+  gap: 2px;
+}
+
+.wt-nav .wt-subnav button {
+  height: 34px;
+  padding: 0 11px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .wt-sidebar-account {
   margin-top: auto;
   padding: 14px;
@@ -1706,6 +1748,17 @@
   padding: 18px 0 14px;
 }
 
+.wt-order-toolbar {
+  min-height: 52px;
+  padding-top: 0;
+  border-bottom: 1px solid var(--wt-border);
+  margin-bottom: 16px;
+}
+
+.wt-order-toolbar :deep(.arco-btn) {
+  white-space: nowrap;
+}
+
 .wt-record-table {
   border: 1px solid var(--wt-border);
   border-radius: 7px;
@@ -1854,6 +1907,65 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.wt-payment-success {
+  padding: 8px 0 2px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.wt-payment-success > strong {
+  font-size: 20px;
+}
+
+.wt-payment-success > span {
+  color: var(--wt-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.wt-payment-success-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  color: #168653;
+  background: #edf9f3;
+  display: grid;
+  place-items: center;
+}
+
+.wt-payment-success-icon svg {
+  font-size: 32px;
+}
+
+.wt-payment-success-amount {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid var(--wt-border);
+  border-radius: 7px;
+  background: #f7f9fc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wt-payment-success-amount span {
+  color: var(--wt-muted);
+  font-size: 12px;
+}
+
+.wt-payment-success-amount strong {
+  font-size: 20px;
+}
+
+.wt-payment-success :deep(.arco-btn) {
+  margin-top: 4px;
+  white-space: nowrap;
 }
 
 .wt-recharge-dialog {
@@ -2043,6 +2155,26 @@
     text-align: center;
   }
 
+  .wt-subnav {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    min-width: 132px;
+    padding: 6px;
+    border: 1px solid var(--wt-border);
+    border-radius: 6px;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(24, 36, 56, 0.12);
+  }
+
+  .wt-nav .wt-subnav button {
+    height: 36px;
+    justify-content: start;
+    text-align: left;
+  }
+
   .wt-sidebar-account {
     display: none;
   }
@@ -2103,6 +2235,10 @@
     grid-template-columns: 18px auto auto;
     padding: 0 8px;
     font-size: 12px;
+  }
+
+  .wt-nav .wt-nav-parent {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
   }
 
   .wt-topbar {
@@ -2204,6 +2340,10 @@
   .wt-nav button {
     grid-template-columns: 18px auto;
     gap: 6px;
+  }
+
+  .wt-nav .wt-nav-parent {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
   }
 
   .wt-nav em {
