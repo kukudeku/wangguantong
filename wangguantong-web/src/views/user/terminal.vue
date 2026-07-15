@@ -1004,6 +1004,22 @@
     </a-modal>
 
     <a-modal
+      v-model:visible="balancePaymentConfirmVisible"
+      title="确认余额支付"
+      width="min(440px, calc(100vw - 24px))"
+      ok-text="确认支付并下单"
+      cancel-text="取消"
+      :ok-loading="paymentSubmitting"
+      :on-before-ok="submitBalanceCartOrder"
+    >
+      <div class="wt-payment-amount">
+        <span>本次将从账户余额扣除</span>
+        <strong>￥{{ money(cartPayable) }}</strong>
+        <small>确认支付后订单才会提交，请核对购物车商品和金额。</small>
+      </div>
+    </a-modal>
+
+    <a-modal
       v-model:visible="paymentDialog.visible"
       :title="paymentDialog.paymentMethod"
       width="min(440px, calc(100vw - 24px))"
@@ -1016,7 +1032,8 @@
       <div v-if="paymentDialog.status === '已支付'" class="wt-payment-success">
         <div class="wt-payment-success-icon"><IconCheckCircleFill /></div>
         <strong>支付成功</strong>
-        <span>订单已提交，可在“自助点餐 - 订单记录”中查看。</span>
+        <span v-if="paymentDialog.businessType === '余额充值'">充值金额已到账，可在“余额账户”中查看。</span>
+        <span v-else>订单已提交，可在“自助点餐 - 订单记录”中查看。</span>
         <div class="wt-payment-success-amount">
           <span>支付金额</span>
           <strong>￥{{ money(paymentDialog.amount) }}</strong>
@@ -1052,7 +1069,7 @@
       v-model:visible="rechargeVisible"
       title="余额充值"
       width="min(520px, calc(100vw - 24px))"
-      ok-text="确认充值"
+      ok-text="去支付"
       cancel-text="取消"
       :ok-loading="rechargeSubmitting"
       :on-before-ok="submitRecharge"
@@ -1089,6 +1106,11 @@
             <template #prefix>￥</template>
           </a-input-number>
         </div>
+        <div class="wt-recharge-field">
+          <label>支付方式</label>
+          <a-radio-group v-model="rechargeForm.paymentMethod" type="button" :options="rechargePaymentMethods" />
+        </div>
+        <div class="wt-dialog-notice">支付成功并通过平台确认后，充值金额会自动转入余额。</div>
       </div>
     </a-modal>
   </div>
@@ -1132,7 +1154,7 @@ import {
 import { getSignInStatus, getUserCoupons, userSignIn } from '../../api/coupon'
 import { getMemberList } from '../../api/member'
 import { endOnline, startOnline } from '../../api/online'
-import { addRecharge } from '../../api/recharge'
+import { createRechargePayment } from '../../api/recharge'
 import { getRepairList, reportRepair } from '../../api/repair'
 import { getPromotionOverview } from '../../api/promotion'
 import { addReservation, cancelReservation, getReservationList, startReservation } from '../../api/reservation'
@@ -1172,11 +1194,13 @@ const now = ref(new Date())
 const reservationVisible = ref(false)
 const passwordVisible = ref(false)
 const rechargeVisible = ref(false)
+const balancePaymentConfirmVisible = ref(false)
 const repairVisible = ref(false)
 const paymentSubmitting = ref(false)
 const paymentChecking = ref(false)
 const paymentDialog = reactive({
   visible: false,
+  businessType: '点餐',
   outTradeNo: '',
   orderBatchNo: '',
   paymentMethod: '',
@@ -1189,12 +1213,13 @@ const voucherSubmitting = ref(false)
 const selectedComputer = ref(null)
 const reservationForm = reactive({ reserveTime: '' })
 const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
-const rechargeForm = reactive({ amount: 50 })
+const rechargeForm = reactive({ amount: 50, paymentMethod: '微信支付' })
 const voucherForm = reactive({ voucherCode: '' })
 const repairForm = reactive({ problemDescription: '' })
 const serviceCallForm = reactive({ requestCategory: '设备协助', location: '', description: '' })
 const serviceRepairForm = reactive({ computerId: null, faultCategory: '电脑故障', description: '' })
 const rechargeOptions = [20, 50, 100, 200]
+const rechargePaymentMethods = ['微信支付', '支付宝支付']
 let timer = null
 let runningRefreshTimer = null
 let paymentPollTimer = null
@@ -1836,6 +1861,7 @@ function openPasswordModal() {
 
 function openRechargeModal() {
   rechargeForm.amount = 50
+  rechargeForm.paymentMethod = '微信支付'
   rechargeSubmitted.value = false
   rechargeVisible.value = true
 }
@@ -1854,13 +1880,23 @@ async function submitRecharge() {
 
   rechargeSubmitting.value = true
   rechargeSubmitted.value = true
+  const selectedMethod = rechargeForm.paymentMethod
+  const alipayWindow = selectedMethod === '支付宝支付' ? window.open('about:blank', '_blank') : null
   try {
-    await addRecharge({ memberId: currentMember.value.id, amount })
-    await refreshCurrentMember()
-    await loadUserRecords()
-    Message.success(`充值 ${money(amount)} 元成功`)
+    const result = await createRechargePayment({
+      memberId: currentMember.value.id,
+      amount,
+      paymentMethod: selectedMethod
+    })
+    openPaymentDialog(result)
+    if (selectedMethod === '支付宝支付') {
+      const cashierUrl = getAlipayPaymentPageUrl(result.outTradeNo)
+      if (alipayWindow) alipayWindow.location.href = cashierUrl
+      else Message.warning('浏览器拦截了收银台窗口，请点击“打开支付宝收银台”')
+    }
     return true
   } catch (error) {
+    if (alipayWindow) alipayWindow.close()
     rechargeSubmitted.value = false
     return false
   } finally {
@@ -1943,9 +1979,24 @@ async function submitCartOrder() {
     Message.error('会员余额不足，请先充值')
     return
   }
-  if (paymentSubmitting.value) return
+  if (paymentMethod.value === '余额支付') {
+    balancePaymentConfirmVisible.value = true
+    return
+  }
+  await placeCartOrder(paymentMethod.value)
+}
+
+async function submitBalanceCartOrder() {
+  if (Number(currentMember.value?.balance || 0) < Number(cartPayable.value)) {
+    Message.error('会员余额不足，请先充值')
+    return false
+  }
+  return placeCartOrder('余额支付')
+}
+
+async function placeCartOrder(selectedMethod) {
+  if (paymentSubmitting.value) return false
   paymentSubmitting.value = true
-  const selectedMethod = paymentMethod.value
   const alipayWindow = selectedMethod === '支付宝支付' ? window.open('about:blank', '_blank') : null
   try {
     const result = await addFoodOrderBatch({
@@ -1962,13 +2013,13 @@ async function submitCartOrder() {
       await refreshCurrentMember()
       await loadUserRecords()
       await loadCouponData()
-      return
+      return true
     }
     if (result.status === '已支付') {
       if (alipayWindow) alipayWindow.close()
       showPaymentSuccess(result)
       await refreshPaymentData()
-      return
+      return true
     }
     openPaymentDialog(result)
     if (selectedMethod === '支付宝支付') {
@@ -1978,8 +2029,10 @@ async function submitCartOrder() {
     }
     await loadUserRecords()
     await loadCouponData()
+    return true
   } catch (error) {
     if (alipayWindow) alipayWindow.close()
+    return false
   } finally {
     paymentSubmitting.value = false
   }
@@ -1988,6 +2041,7 @@ async function submitCartOrder() {
 function openPaymentDialog(payment) {
   Object.assign(paymentDialog, {
     visible: true,
+    businessType: payment.businessType || '点餐',
     outTradeNo: payment.outTradeNo,
     orderBatchNo: payment.orderBatchNo,
     paymentMethod: payment.paymentMethod,
@@ -2003,6 +2057,7 @@ function openPaymentDialog(payment) {
 
 function resumePayment(order) {
   openPaymentDialog({
+    businessType: '点餐',
     outTradeNo: order.paymentOutTradeNo,
     orderBatchNo: order.batchNo,
     paymentMethod: order.paymentMethod,
@@ -2031,6 +2086,7 @@ function showPaymentSuccess(payment = {}) {
   stopPaymentPolling()
   Object.assign(paymentDialog, {
     visible: true,
+    businessType: payment.businessType || paymentDialog.businessType || '点餐',
     outTradeNo: payment.outTradeNo || paymentDialog.outTradeNo,
     orderBatchNo: payment.orderBatchNo || paymentDialog.orderBatchNo,
     paymentMethod: payment.paymentMethod || paymentDialog.paymentMethod || '在线支付',
@@ -2038,16 +2094,23 @@ function showPaymentSuccess(payment = {}) {
     status: '已支付'
   })
   onlineMenuExpanded.value = false
-  foodMenuExpanded.value = true
   activityMenuExpanded.value = false
   promotionMenuExpanded.value = false
-  balanceMenuExpanded.value = false
-  activeTab.value = 'food-order'
+  if (paymentDialog.businessType === '余额充值') {
+    foodMenuExpanded.value = false
+    balanceMenuExpanded.value = true
+    activeTab.value = 'balance'
+  } else {
+    foodMenuExpanded.value = true
+    balanceMenuExpanded.value = false
+    activeTab.value = 'food-order'
+  }
 }
 
 function confirmPaymentSuccess() {
   paymentDialog.visible = false
-  openFoodOrders()
+  if (paymentDialog.businessType === '余额充值') openBalancePage()
+  else openFoodOrders()
 }
 
 function handlePaymentDialogCancel() {
@@ -2075,7 +2138,9 @@ async function checkPaymentStatus(manual) {
       await refreshPaymentData()
     } else if (result.status === '已关闭') {
       stopPaymentPolling()
-      Message.error('支付单已超时关闭，请重新下单')
+      Message.error(paymentDialog.businessType === '余额充值'
+        ? '支付单已超时关闭，请重新发起充值'
+        : '支付单已超时关闭，请重新下单')
       await loadUserRecords()
       await loadCouponData()
     } else if (manual) {
@@ -2099,8 +2164,9 @@ async function handleAlipayReturn() {
       showPaymentSuccess(result)
       await refreshPaymentData()
     } else {
-      Message.info('支付宝支付结果正在确认，请稍后在订单记录中查询')
-      openFoodOrders()
+      Message.info('支付宝支付结果正在确认，请稍后再查询')
+      if (result.businessType === '余额充值') openBalancePage()
+      else openFoodOrders()
     }
   } finally {
     await router.replace('/user')

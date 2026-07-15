@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 public class PaymentStatusResponse {
 
+    private String businessType;
     private String orderBatchNo;
     private String outTradeNo;
     private String paymentMethod;
@@ -14,6 +15,8 @@ public class PaymentStatusResponse {
     private LocalDateTime expireTime;
     private LocalDateTime paidTime;
 
+    public String getBusinessType() { return businessType; }
+    public void setBusinessType(String businessType) { this.businessType = businessType; }
     public String getOrderBatchNo() { return orderBatchNo; }
     public void setOrderBatchNo(String orderBatchNo) { this.orderBatchNo = orderBatchNo; }
     public String getOutTradeNo() { return outTradeNo; }

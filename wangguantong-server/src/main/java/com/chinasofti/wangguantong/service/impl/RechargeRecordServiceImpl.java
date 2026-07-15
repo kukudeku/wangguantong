@@ -1,5 +1,6 @@
 package com.chinasofti.wangguantong.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.chinasofti.wangguantong.entity.Member;
 import com.chinasofti.wangguantong.entity.RechargeRecord;
@@ -37,7 +38,10 @@ public class RechargeRecordServiceImpl extends ServiceImpl<RechargeRecordMapper,
             throw new RuntimeException("充值金额必须大于 0");
         }
 
-        Member member = memberService.getById(memberId);
+        // 锁定会员行，防止两笔同时到账的充值互相覆盖余额。
+        Member member = memberService.getOne(new LambdaQueryWrapper<Member>()
+                .eq(Member::getId, memberId)
+                .last("FOR UPDATE"));
         if (member == null) {
             throw new RuntimeException("会员不存在");
         }

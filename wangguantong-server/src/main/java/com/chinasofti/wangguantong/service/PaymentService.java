@@ -12,6 +12,8 @@ public interface PaymentService {
 
     PaymentCreateResponse createPayment(String orderBatchNo, Long memberId, String paymentMethod, BigDecimal amount);
 
+    PaymentCreateResponse createRechargePayment(Long memberId, String paymentMethod, BigDecimal amount);
+
     PaymentStatusResponse queryPayment(String outTradeNo);
 
     byte[] createWechatQrCode(String outTradeNo);

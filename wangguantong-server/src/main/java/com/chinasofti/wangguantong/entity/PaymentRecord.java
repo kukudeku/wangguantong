@@ -12,6 +12,7 @@ public class PaymentRecord {
 
     @TableId(type = IdType.AUTO)
     private Long id;
+    private String businessType;
     private String orderBatchNo;
     private Long memberId;
     private String paymentMethod;
@@ -28,6 +29,8 @@ public class PaymentRecord {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public String getBusinessType() { return businessType; }
+    public void setBusinessType(String businessType) { this.businessType = businessType; }
     public String getOrderBatchNo() { return orderBatchNo; }
     public void setOrderBatchNo(String orderBatchNo) { this.orderBatchNo = orderBatchNo; }
     public Long getMemberId() { return memberId; }

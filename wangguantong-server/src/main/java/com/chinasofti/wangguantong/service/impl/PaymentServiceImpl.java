@@ -22,13 +22,16 @@ import com.chinasofti.wangguantong.config.PaymentProperties;
 import com.chinasofti.wangguantong.dto.PaymentCreateResponse;
 import com.chinasofti.wangguantong.dto.PaymentStatusResponse;
 import com.chinasofti.wangguantong.entity.FoodOrder;
+import com.chinasofti.wangguantong.entity.Member;
 import com.chinasofti.wangguantong.entity.PaymentRecord;
 import com.chinasofti.wangguantong.entity.PaymentRefund;
 import com.chinasofti.wangguantong.mapper.FoodOrderMapper;
 import com.chinasofti.wangguantong.mapper.PaymentRecordMapper;
 import com.chinasofti.wangguantong.mapper.PaymentRefundMapper;
 import com.chinasofti.wangguantong.service.CouponService;
+import com.chinasofti.wangguantong.service.MemberService;
 import com.chinasofti.wangguantong.service.PaymentService;
+import com.chinasofti.wangguantong.service.RechargeRecordService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -55,6 +58,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -79,6 +84,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private static final String WECHAT_PAYMENT = "微信支付";
     private static final String ALIPAY_PAYMENT = "支付宝支付";
+    private static final String FOOD_ORDER_BUSINESS = "点餐";
+    private static final String RECHARGE_BUSINESS = "余额充值";
     private static final String PENDING = "待支付";
     private static final String PAID = "已支付";
     private static final String CLOSED = "已关闭";
@@ -93,6 +100,9 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRefundMapper paymentRefundMapper;
     private final FoodOrderMapper foodOrderMapper;
     private final CouponService couponService;
+    private final MemberService memberService;
+    private final RechargeRecordService rechargeRecordService;
+    private final TransactionTemplate transactionTemplate;
 
     private volatile RSAAutoCertificateConfig wechatConfig;
     private volatile NativePayService nativePayService;
@@ -105,12 +115,18 @@ public class PaymentServiceImpl implements PaymentService {
                               PaymentRecordMapper paymentRecordMapper,
                               PaymentRefundMapper paymentRefundMapper,
                               FoodOrderMapper foodOrderMapper,
-                              CouponService couponService) {
+                              CouponService couponService,
+                              MemberService memberService,
+                              RechargeRecordService rechargeRecordService,
+                              PlatformTransactionManager transactionManager) {
         this.properties = properties;
         this.paymentRecordMapper = paymentRecordMapper;
         this.paymentRefundMapper = paymentRefundMapper;
         this.foodOrderMapper = foodOrderMapper;
         this.couponService = couponService;
+        this.memberService = memberService;
+        this.rechargeRecordService = rechargeRecordService;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     @Override
@@ -118,6 +134,36 @@ public class PaymentServiceImpl implements PaymentService {
                                                Long memberId,
                                                String paymentMethod,
                                                BigDecimal amount) {
+        return createPayment(FOOD_ORDER_BUSINESS, orderBatchNo, memberId, paymentMethod, amount);
+    }
+
+    @Override
+    public PaymentCreateResponse createRechargePayment(Long memberId,
+                                                       String paymentMethod,
+                                                       BigDecimal amount) {
+        if (memberId == null) {
+            throw new RuntimeException("用户信息不存在，请重新登录");
+        }
+        Member member = memberService.getById(memberId);
+        if (member == null || !"正常".equals(member.getStatus())) {
+            throw new RuntimeException("用户不存在或状态异常");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("充值金额必须大于 0");
+        }
+        if (amount.compareTo(new BigDecimal("10000")) > 0) {
+            throw new RuntimeException("单次充值不能超过 10000 元");
+        }
+        String rechargeNo = "RC" + System.currentTimeMillis()
+                + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        return createPayment(RECHARGE_BUSINESS, rechargeNo, memberId, paymentMethod, amount);
+    }
+
+    private PaymentCreateResponse createPayment(String businessType,
+                                                String orderBatchNo,
+                                                Long memberId,
+                                                String paymentMethod,
+                                                BigDecimal amount) {
         if (!(WECHAT_PAYMENT.equals(paymentMethod) || ALIPAY_PAYMENT.equals(paymentMethod))) {
             throw new RuntimeException("只有微信支付或支付宝支付需要创建第三方支付单");
         }
@@ -127,6 +173,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         LocalDateTime now = LocalDateTime.now();
         PaymentRecord record = new PaymentRecord();
+        record.setBusinessType(businessType);
         record.setOrderBatchNo(orderBatchNo);
         record.setMemberId(memberId);
         record.setPaymentMethod(paymentMethod);
@@ -197,7 +244,7 @@ public class PaymentServiceImpl implements PaymentService {
         AlipayTradePagePayModel model = new AlipayTradePagePayModel();
         model.setOutTradeNo(record.getOutTradeNo());
         model.setTotalAmount(money(record.getAmount()));
-        model.setSubject("网管通点餐-" + record.getOrderBatchNo());
+        model.setSubject(paymentSubject(record));
         model.setProductCode("FAST_INSTANT_TRADE_PAY");
         model.setTimeExpire(record.getExpireTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
@@ -407,7 +454,7 @@ public class PaymentServiceImpl implements PaymentService {
         PrepayRequest request = new PrepayRequest();
         request.setAppid(wechat.getAppId());
         request.setMchid(wechat.getMerchantId());
-        request.setDescription("网管通点餐-" + record.getOrderBatchNo());
+        request.setDescription(paymentSubject(record));
         request.setOutTradeNo(record.getOutTradeNo());
         request.setNotifyUrl(wechat.getNotifyUrl());
         request.setTimeExpire(formatWechatExpireTime(record.getExpireTime(), ZoneId.systemDefault()));
@@ -508,19 +555,28 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void markPaid(PaymentRecord record, String providerTradeNo, LocalDateTime paidTime) {
-        if (PAID.equals(record.getStatus()) || PARTIAL_REFUND.equals(record.getStatus())
-                || REFUNDING.equals(record.getStatus()) || REFUNDED.equals(record.getStatus())) {
-            return;
-        }
-        record.setStatus(PAID);
-        record.setProviderTradeNo(providerTradeNo);
-        record.setPaidTime(paidTime == null ? LocalDateTime.now() : paidTime);
-        record.setUpdateTime(LocalDateTime.now());
-        paymentRecordMapper.updateById(record);
-        foodOrderMapper.update(null, new LambdaUpdateWrapper<FoodOrder>()
-                .eq(FoodOrder::getBatchNo, record.getOrderBatchNo())
-                .eq(FoodOrder::getStatus, PENDING)
-                .set(FoodOrder::getStatus, "已下单"));
+        transactionTemplate.executeWithoutResult(status -> {
+            PaymentRecord latest = requirePaymentForUpdate(record.getOutTradeNo());
+            if (PAID.equals(latest.getStatus()) || PARTIAL_REFUND.equals(latest.getStatus())
+                    || REFUNDING.equals(latest.getStatus()) || REFUNDED.equals(latest.getStatus())) {
+                return;
+            }
+            latest.setStatus(PAID);
+            latest.setProviderTradeNo(providerTradeNo);
+            latest.setPaidTime(paidTime == null ? LocalDateTime.now() : paidTime);
+            latest.setUpdateTime(LocalDateTime.now());
+            paymentRecordMapper.updateById(latest);
+
+            if (RECHARGE_BUSINESS.equals(latest.getBusinessType())) {
+                rechargeRecordService.recharge(latest.getMemberId(), latest.getAmount(),
+                        latest.getPaymentMethod() + "充值", latest.getOutTradeNo());
+                return;
+            }
+            foodOrderMapper.update(null, new LambdaUpdateWrapper<FoodOrder>()
+                    .eq(FoodOrder::getBatchNo, latest.getOrderBatchNo())
+                    .eq(FoodOrder::getStatus, PENDING)
+                    .set(FoodOrder::getStatus, "已下单"));
+        });
     }
 
     private void completeRefund(PaymentRefund refund, String providerRefundNo, LocalDateTime refundedTime) {
@@ -598,6 +654,9 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(CLOSED);
         payment.setUpdateTime(LocalDateTime.now());
         paymentRecordMapper.updateById(payment);
+        if (RECHARGE_BUSINESS.equals(payment.getBusinessType())) {
+            return;
+        }
         foodOrderMapper.update(null, new LambdaUpdateWrapper<FoodOrder>()
                 .eq(FoodOrder::getBatchNo, payment.getOrderBatchNo())
                 .eq(FoodOrder::getStatus, PENDING)
@@ -715,8 +774,25 @@ public class PaymentServiceImpl implements PaymentService {
         return record;
     }
 
+    private PaymentRecord requirePaymentForUpdate(String outTradeNo) {
+        PaymentRecord record = paymentRecordMapper.selectOne(new LambdaQueryWrapper<PaymentRecord>()
+                .eq(PaymentRecord::getOutTradeNo, outTradeNo)
+                .last("FOR UPDATE"));
+        if (record == null) {
+            throw new RuntimeException("支付记录不存在");
+        }
+        return record;
+    }
+
+    private String paymentSubject(PaymentRecord record) {
+        return RECHARGE_BUSINESS.equals(record.getBusinessType())
+                ? "网管通余额充值-" + record.getOrderBatchNo()
+                : "网管通点餐-" + record.getOrderBatchNo();
+    }
+
     private PaymentCreateResponse toCreateResponse(PaymentRecord record) {
         PaymentCreateResponse response = new PaymentCreateResponse();
+        response.setBusinessType(record.getBusinessType());
         response.setOrderBatchNo(record.getOrderBatchNo());
         response.setOutTradeNo(record.getOutTradeNo());
         response.setPaymentMethod(record.getPaymentMethod());
@@ -727,6 +803,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private PaymentStatusResponse toStatusResponse(PaymentRecord record) {
         PaymentStatusResponse response = new PaymentStatusResponse();
+        response.setBusinessType(record.getBusinessType());
         response.setOrderBatchNo(record.getOrderBatchNo());
         response.setOutTradeNo(record.getOutTradeNo());
         response.setPaymentMethod(record.getPaymentMethod());

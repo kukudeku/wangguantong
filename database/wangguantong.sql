@@ -93,7 +93,8 @@ CREATE TABLE `food_order` (
 -- 第三方支付主记录：购物车中的多条商品共用一次微信或支付宝付款。
 CREATE TABLE `payment_record` (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
-  order_batch_no VARCHAR(60) NOT NULL COMMENT '点餐订单批次号',
+  business_type VARCHAR(20) NOT NULL DEFAULT '点餐' COMMENT '业务类型：点餐 / 余额充值',
+  order_batch_no VARCHAR(60) NOT NULL COMMENT '业务批次号',
   member_id BIGINT NULL COMMENT '会员ID，散客可为空',
   payment_method VARCHAR(20) NOT NULL COMMENT '微信支付 / 支付宝支付',
   out_trade_no VARCHAR(64) NOT NULL COMMENT '商户支付单号',
@@ -185,7 +186,8 @@ CREATE TABLE `recharge_record` (
   amount DECIMAL(10,2) NOT NULL COMMENT '充值金额',
   recharge_type VARCHAR(30) NOT NULL DEFAULT '余额充值' COMMENT '充值方式：余额充值 / 团购券充值',
   reference_no VARCHAR(80) NULL COMMENT '关联单号或团购券码',
-  create_time DATETIME NOT NULL COMMENT '充值时间'
+  create_time DATETIME NOT NULL COMMENT '充值时间',
+  KEY idx_recharge_reference_no (`reference_no`)
 ) COMMENT='充值记录表';
 
 -- 推广奖励规则由管理员统一设置。
